@@ -90,11 +90,6 @@ final class HandRig {
 
                 skin.isDoubleSided = true
         sleeveMat.isDoubleSided = true
-        // Run 112: thin black slits at the skin/sleeve join are the unlit
-        // interior of the double-sided meshes seen through a hairline crack.
-        // A small emission keeps any visible interior navy / skin coloured.
-        sleeveMat.emission.contents = UIColor(red: 0.9, green: 0.0, blue: 0.9, alpha: 1) /*DIAG*/
-        skin.emission.contents = UIColor(red: 0.0, green: 0.9, blue: 0.9, alpha: 1) /*DIAG*/
 
 
         // mesh hand (CC0 human-hand, two baked poses) replaces the capsule
@@ -116,6 +111,8 @@ final class HandRig {
         forearmExt.geometry = nil
         forearmExt.name = "continuous-forearm"
         root.addChildNode(forearmExt)
+        forearmLiner.name = "continuous-forearm-liner"
+        root.addChildNode(forearmLiner)
         forearmMaterial = sleeveMat
         // real finger flex: grip and relax share topology (8120 verts), so a
         // morpher blends them - the fingers visibly squeeze while working.
@@ -542,6 +539,18 @@ final class HandRig {
     }
 
     private var forearmMaterial: SCNMaterial?
+    // Runs 112-114: the thin black slit at the skin/sleeve join is the sleeve's
+    // own inside wall (back faces get no diffuse light, so they read near black).
+    // A slightly smaller, constant-shaded navy liner sits inside the sleeve so
+    // the inside seen at the hem is cloth coloured, not black.
+    private let forearmLiner = SCNNode()
+    private lazy var linerMat: SCNMaterial = {
+        let m = SCNMaterial()
+        m.lightingModel = .constant
+        m.diffuse.contents = UIColor(red: 0.075, green: 0.09, blue: 0.13, alpha: 1)
+        m.isDoubleSided = true
+        return m
+    }()
     private func setWorkPivot(tool: String, angle: Float) {
         guard tipLocal[tool] != nil else { return }
         // Work motion turns about the actual shaft direction. The separate
@@ -729,6 +738,14 @@ final class HandRig {
                               elements: [SCNGeometryElement(indices: indices, primitiveType: .triangles)])
         if let m = forearmMaterial { geo.materials = [m] }
         forearmExt.geometry = geo
+        let linerVerts = vertices.enumerated().map { (idx, v) -> SCNVector3 in
+            let c = samples[idx / sides].pos
+            return SCNVector3(c.x + (v.x - c.x) * 0.94, c.y + (v.y - c.y) * 0.94, c.z + (v.z - c.z) * 0.94)
+        }
+        let linerGeo = SCNGeometry(sources: [SCNGeometrySource(vertices: linerVerts), SCNGeometrySource(normals: normals)],
+                                   elements: [SCNGeometryElement(indices: indices, primitiveType: .triangles)])
+        linerGeo.materials = [linerMat]
+        forearmLiner.geometry = linerGeo
         // Cuff telemetry (sim-only via //ADLOG): the offline replica bench
         // needs the engine's actual cuff anchor, wrist axis and work-pivot
         // rotation; the existing CFHAND line logs position only.
