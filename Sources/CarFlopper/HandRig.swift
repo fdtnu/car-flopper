@@ -177,7 +177,10 @@ final class HandRig {
         let handKey = SCNLight()
         handKey.type = .directional
         handKey.color = UIColor(red: 0.98, green: 0.97, blue: 0.94, alpha: 1)
-        handKey.intensity = 850
+        // Run 116 review: the thumb top blew out pale next to a deep orange back of
+        // hand (single hard key on lambert). Softer key plus a camera-side fill and a
+        // hand-only ambient so the skin tone reads evenly across the hand.
+        handKey.intensity = 520
         handKey.castsShadow = false
         handKey.categoryBitMask = 2
         let handKeyNode = SCNNode()
@@ -185,6 +188,25 @@ final class HandRig {
         handKeyNode.categoryBitMask = 2
         handKeyNode.eulerAngles = SCNVector3(-1.25, 0, 0)
         root.addChildNode(handKeyNode)
+        let handFill = SCNLight()
+        handFill.type = .directional
+        handFill.color = UIColor(red: 1.0, green: 0.95, blue: 0.90, alpha: 1)
+        handFill.intensity = 240
+        handFill.castsShadow = false
+        handFill.categoryBitMask = 2
+        let handFillNode = SCNNode()
+        handFillNode.light = handFill
+        handFillNode.categoryBitMask = 2
+        handFillNode.eulerAngles = SCNVector3(0.35, 0.25, 0)
+        root.addChildNode(handFillNode)
+        let handAmb = SCNLight()
+        handAmb.type = .ambient
+        handAmb.color = UIColor(white: 0.22, alpha: 1)
+        handAmb.categoryBitMask = 2
+        let handAmbNode = SCNNode()
+        handAmbNode.light = handAmb
+        handAmbNode.categoryBitMask = 2
+        root.addChildNode(handAmbNode)
     }
 
     // hand-local tool materials: PBR + env + bloom blew the shared chrome out
