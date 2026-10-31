@@ -111,8 +111,6 @@ final class HandRig {
         forearmExt.geometry = nil
         forearmExt.name = "continuous-forearm"
         root.addChildNode(forearmExt)
-        forearmLiner.name = "continuous-forearm-liner"
-        root.addChildNode(forearmLiner)
         forearmMaterial = sleeveMat
         // real finger flex: grip and relax share topology (8120 verts), so a
         // morpher blends them - the fingers visibly squeeze while working.
@@ -539,18 +537,6 @@ final class HandRig {
     }
 
     private var forearmMaterial: SCNMaterial?
-    // Runs 112-114: the thin black slit at the skin/sleeve join is the sleeve's
-    // own inside wall (back faces get no diffuse light, so they read near black).
-    // A slightly smaller, constant-shaded navy liner sits inside the sleeve so
-    // the inside seen at the hem is cloth coloured, not black.
-    private let forearmLiner = SCNNode()
-    private lazy var linerMat: SCNMaterial = {
-        let m = SCNMaterial()
-        m.lightingModel = .constant
-        m.diffuse.contents = UIColor(red: 0.075, green: 0.09, blue: 0.13, alpha: 1)
-        m.isDoubleSided = true
-        return m
-    }()
     private func setWorkPivot(tool: String, angle: Float) {
         guard tipLocal[tool] != nil else { return }
         // Work motion turns about the actual shaft direction. The separate
@@ -684,7 +670,11 @@ final class HandRig {
             // Thin hem (no throat through the palm): the sleeve now ends 3.2 mm
             // inside the wrist cut and tucks to 0.93x there so the end sits on
             // the skin instead of leaving an open annulus or a raised roll.
-            (-0.0032, 0.93), (-0.0024, 1.00), (-0.0014, 1.035), (-0.0005, 1.045), (0, 1.05),
+            // Runs 112-115: the thin dark line at the join is the sleeve's own hem
+            // rim (a steep 3 mm flare 0.93 to 1.05 whose outer face points back
+            // at the hand, away from the light). Spread the same tuck over 10 mm
+            // so the end is buried deeper and the flare faces the camera.
+            (-0.0100, 0.93), (-0.0070, 0.97), (-0.0040, 1.01), (-0.0015, 1.035), (0, 1.05),
             (0.0012, 1.05), (0.0028, 1.055), (0.005, 1.06), (0.010, 1.07), (0.020, 1.09), (0.04, 1.12), (0.14, 1.21),
             (0.27, 1.24), (0.34, 1.20), (0.45, 1.28), (0.55, 1.40), (1.2, 1.60)
         ]
@@ -738,14 +728,6 @@ final class HandRig {
                               elements: [SCNGeometryElement(indices: indices, primitiveType: .triangles)])
         if let m = forearmMaterial { geo.materials = [m] }
         forearmExt.geometry = geo
-        let linerVerts = vertices.enumerated().map { (idx, v) -> SCNVector3 in
-            let c = samples[idx / sides].pos
-            return SCNVector3(c.x + (v.x - c.x) * 0.94, c.y + (v.y - c.y) * 0.94, c.z + (v.z - c.z) * 0.94)
-        }
-        let linerGeo = SCNGeometry(sources: [SCNGeometrySource(vertices: linerVerts), SCNGeometrySource(normals: normals)],
-                                   elements: [SCNGeometryElement(indices: indices, primitiveType: .triangles)])
-        linerGeo.materials = [linerMat]
-        forearmLiner.geometry = linerGeo
         // Cuff telemetry (sim-only via //ADLOG): the offline replica bench
         // needs the engine's actual cuff anchor, wrist axis and work-pivot
         // rotation; the existing CFHAND line logs position only.
