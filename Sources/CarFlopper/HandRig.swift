@@ -93,8 +93,8 @@ final class HandRig {
         // Run 112: thin black slits at the skin/sleeve join are the unlit
         // interior of the double-sided meshes seen through a hairline crack.
         // A small emission keeps any visible interior navy / skin coloured.
-        sleeveMat.emission.contents = UIColor(red: 0.045, green: 0.055, blue: 0.080, alpha: 1)
-        skin.emission.contents = UIColor(red: 0.16, green: 0.10, blue: 0.07, alpha: 1)
+        sleeveMat.emission.contents = UIColor(red: 0.9, green: 0.0, blue: 0.9, alpha: 1) /*DIAG*/
+        skin.emission.contents = UIColor(red: 0.0, green: 0.9, blue: 0.9, alpha: 1) /*DIAG*/
 
 
         // mesh hand (CC0 human-hand, two baked poses) replaces the capsule
