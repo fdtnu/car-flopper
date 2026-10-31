@@ -8457,6 +8457,27 @@ enum HandMeshAsset {
         entries.first { $0.name == name }!
     }
 
+    // Run 116 review: the baked grip poses keep the relaxed hand's finger
+    // spacing (about 1.2-1.6 cm gaps), so fingers hang apart around the handle
+    // and the handle shows between them. Translate each finger rigidly toward
+    // the middle of the finger group (no stretch of the finger itself), blended in
+    // over the knuckles. Weights come from the shared-topology relaxed hand, so
+    // the grip, squeeze and round variants all move identically.
+    private static func fingerGapClose(_ verts: inout [Float], nv: Int) {
+        let r = entry("relax")
+        func sm(_ t: Float) -> Float { let c = max(0, min(1, t)); return c * c * (3 - 2 * c) }
+        blob.withUnsafeBytes { ptr in
+            let q = ptr.baseAddress!.advanced(by: r.off).assumingMemoryBound(to: UInt16.self)
+            for i in 0..<nv {
+                let rx = r.min.x + Float(q[i*3+0]) / 65535.0 * r.span.x
+                let ry = r.min.y + Float(q[i*3+1]) / 65535.0 * r.span.y
+                let thumb = sm((-0.074 - rx) / 0.006) * (1 - sm((ry - 0.112) / 0.008))
+                let wf = sm((ry - 0.088) / 0.020) * (1 - thumb)
+                verts[i*3+0] += -(rx + 0.032) * 0.34 * wf
+            }
+        }
+    }
+
     static func geometry(_ name: String) -> SCNGeometry {
         let e = entry(name)
         var verts = [Float](repeating: 0, count: e.nv * 3)
@@ -8472,6 +8493,9 @@ enum HandMeshAsset {
             }
             let ip = base.advanced(by: e.off + e.nv * 6).assumingMemoryBound(to: UInt16.self)
             for i in 0..<e.nf * 3 { idx[i] = ip[i] }
+        }
+        if name == "grip" || name == "squeeze" || name == "roundGrip" || name == "roundSqueeze" {
+            fingerGapClose(&verts, nv: e.nv)
         }
         // smooth vertex normals from face normals
         for f in 0..<e.nf {
