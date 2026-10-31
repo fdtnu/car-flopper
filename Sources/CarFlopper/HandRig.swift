@@ -88,7 +88,7 @@ final class HandRig {
         let skin = Mat.flat(0.87, 0.63, 0.50, rough: 0.6)
         let sleeveMat = Mat.flat(0.16, 0.19, 0.26, rough: 0.95)
 
-                skin.isDoubleSided = true
+                skin.isDoubleSided = false // DIAG run117: cull skin back faces (single variable)
         sleeveMat.isDoubleSided = true
 
 
