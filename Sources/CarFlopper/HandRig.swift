@@ -62,6 +62,7 @@ final class HandRig {
     private var swayX: Float = 0
     private var swayY: Float = 0
     private var workTime: Float = 0
+    private var skinMatRef: SCNMaterial?
     //ADLOG private var logT: Float = 0
     //ADLOG private var extLogT: Double = 0
     //ADLOG private var stressT: Double = 0
@@ -88,7 +89,8 @@ final class HandRig {
         let skin = Mat.flat(0.87, 0.63, 0.50, rough: 0.6)
         let sleeveMat = Mat.flat(0.16, 0.19, 0.26, rough: 0.95)
 
-                skin.isDoubleSided = false // DIAG run117: cull skin back faces (single variable)
+                skin.isDoubleSided = true
+        skinMatRef = skin
         sleeveMat.isDoubleSided = true
 
 
@@ -330,6 +332,7 @@ final class HandRig {
         let targetAmp: Float = min(1, move)
         bobAmp += (targetAmp - bobAmp) * min(1, dt * 7)
         phase += dt * (2.2 + bobAmp * 7.5)
+        //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFAutoDriveRepair") { phase = 0; bobAmp = 0 } // sim-only frozen-pose diagnostic
 
         // look sway: hand lags camera rotation
         let sx = max(-0.055, min(0.055, -yawVel * 0.050))
@@ -376,6 +379,7 @@ final class HandRig {
             if p >= 1 { mode = .idle }
         case .working:
             workTime += dt
+            //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFAutoDriveRepair") { workTime = 1.0 } // sim-only frozen-pose diagnostic
             // The working end follows the live transformed surface point.
             var aim: SCNVector3? = nil
             if let w = workTargetWorld, let cam = root.parent {
@@ -504,6 +508,10 @@ final class HandRig {
         //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFStressCuff"), mode == .working, currentTool == "welder" {
         //ADLOG     stressT += Double(dt)
         //ADLOG     wrist.eulerAngles.x += Float(sin(stressT * 0.7) * 0.61)
+        //ADLOG }
+        //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFAutoDriveRepair"), let sm = skinMatRef {
+        //ADLOG     let ds = Int(CACurrentMediaTime() / 3.0) % 2 == 0
+        //ADLOG     if sm.isDoubleSided != ds { sm.isDoubleSided = ds; NSLog("[CFAUTODRIVE][CFSKIN] doubleSided=%d", ds ? 1 : 0) }
         //ADLOG }
         updateForearmExt()
         //ADLOG logT += dt
