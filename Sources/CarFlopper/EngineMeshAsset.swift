@@ -27,12 +27,15 @@ enum EngineMeshAsset {
     // Fresh material per engine node: the repair flow swaps materials on the
     // part node, so the clean look must be restorable after a rust state.
     static func material() -> SCNMaterial {
+        // Default (blinn) lighting like every other scene material: the
+        // scene's lightingEnvironment IBL only affects physicallyBased
+        // materials, so PBR here got lights + full IBL and blew out white
+        // under the HDR bloom camera.
         let m = SCNMaterial()
-        m.lightingModel = .physicallyBased
         m.diffuse.contents = baseColor
         m.roughness.contents = NSNumber(value: 0.55)
         m.metalness.contents = NSNumber(value: 0.25)
-        m.specular.contents = UIColor(white: 0.5, alpha: 1)
+        m.specular.contents = UIColor(white: 0.35, alpha: 1)
         return m
     }
 
