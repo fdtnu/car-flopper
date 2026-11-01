@@ -577,6 +577,16 @@ final class HandRig {
     // the mesh's own cut plane at any flex angle, hugs +wz just past the cut,
     // then bends to the forearm axis inside the opaque sleeve, curves at the
     // two-bone elbow and escapes off the lower-right frame edge.
+    private static let sleeveProf: [Float] = [0.831, 0.764, 0.678, 0.625, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.669, 0.751, 0.803, 0.864, 0.953, 1.003, 1.027, 1.058, 0.990, 1.057, 0.980, 0.922, 0.901, 0.860, 0.837, 0.833, 0.840, 0.861, 0.856, 0.816, 0.894, 0.836, 0.926, 0.926, 0.877]
+    private static func sleeveProfile(_ a: Float) -> Float {
+        let n = sleeveProf.count
+        var x = a / (2 * Float.pi) * Float(n) - 0.5
+        x = x - Float(n) * floorf(x / Float(n))
+        let i0 = Int(x) % n, i1 = (i0 + 1) % n
+        let f = x - floorf(x)
+        return sleeveProf[i0] * (1 - f) + sleeveProf[i1] * f
+    }
+
     private func updateForearmExt() {
         // Measured centroid of the skin mesh's planar wrist-cut ring (wrist
         // space, relax grip; the grip pose differs by <1 mm). Covering this
@@ -726,9 +736,15 @@ final class HandRig {
                 by = simd_normalize(simd_cross(smp.tan, bx))
             }
             let k = tubeRadius(radiusKeys, smp.s - cuffS)
+            // Skin-outline profile (run 126 test): the wrist cut is far from an ellipse (skin/ellipse 0.45-1.0 by angle),
+            // and on the -x side the skin reaches ~0.99 of the sleeve ellipse at the open end. Follow the measured outline at the
+            // cut (x1.08 margin) and relax to the plain ellipse over 35 mm toward the forearm.
+            let tFlare = max(0, min(1, (smp.s - cuffS) / 0.035))
+            let tSm = tFlare * tFlare * (3 - 2 * tFlare)
             for j in 0..<sides {
                 let a = Float(j) / Float(sides) * Float.pi * 2
-                let off = bx * (cosf(a) * 0.030 * k) + by * (sinf(a) * 0.024 * k)
+                let pf = HandRig.sleeveProfile(a) * (1 - tSm) + tSm
+                let off = bx * (cosf(a) * 0.030 * k * pf) + by * (sinf(a) * 0.024 * k * pf)
                 let p = smp.pos + off
                 vertices.append(SCNVector3(p.x, p.y, p.z))
                 let nrm = simd_normalize(off)
