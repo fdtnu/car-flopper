@@ -129,9 +129,12 @@ enum GarageBuilder {
     static func buildEnvironment(into root: SCNNode) {
         Mat.setup()
 
-        // floor with procedural concrete
+        // floor with CC0 photo concrete (ambientCG Concrete034, see ASSETS.md)
         let floorMat = SCNMaterial()
-        floorMat.diffuse.contents = TexGen.concrete()
+        floorMat.diffuse.contents = GarageTexBlob.floor
+        floorMat.diffuse.wrapS = .repeat
+        floorMat.diffuse.wrapT = .repeat
+        floorMat.diffuse.contentsTransform = SCNMatrix4MakeScale(4, 3, 1)
         floorMat.roughness.contents = 0.85
         floorMat.metalness.contents = 0.05
         let floor = SCNNode(geometry: SCNBox(width: 16, height: 0.1, length: 12, chamferRadius: 0))
@@ -158,9 +161,20 @@ enum GarageBuilder {
             root.addChildNode(stain)
         }
 
-        // walls with cinderblock paint
-        let wallMatN = SCNMaterial(); wallMatN.diffuse.contents = TexGen.wallPaint(base: (0.56, 0.54, 0.50)); wallMatN.roughness.contents = 0.92
-        let wallMatD = SCNMaterial(); wallMatD.diffuse.contents = TexGen.wallPaint(base: (0.40, 0.38, 0.35)); wallMatD.roughness.contents = 0.92
+        // walls with CC0 photo block (ambientCG Bricks076C, tinted to the
+        // light/dark wall bases, see ASSETS.md)
+        let wallMatN = SCNMaterial()
+        wallMatN.diffuse.contents = GarageTexBlob.wallNorth
+        wallMatN.diffuse.wrapS = .repeat
+        wallMatN.diffuse.wrapT = .repeat
+        wallMatN.diffuse.contentsTransform = SCNMatrix4MakeScale(4, 2, 1)
+        wallMatN.roughness.contents = 0.92
+        let wallMatD = SCNMaterial()
+        wallMatD.diffuse.contents = GarageTexBlob.wallDark
+        wallMatD.diffuse.wrapS = .repeat
+        wallMatD.diffuse.wrapT = .repeat
+        wallMatD.diffuse.contentsTransform = SCNMatrix4MakeScale(4, 2, 1)
+        wallMatD.roughness.contents = 0.92
 
         let wallN = SCNNode(geometry: SCNBox(width: 16, height: 4.5, length: 0.2, chamferRadius: 0))
         wallN.position = SCNVector3(0, 2.25, -6)
