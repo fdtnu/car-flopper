@@ -14,3 +14,9 @@
 
 ## Downloaded for future unlock content (not yet shipped)
 - "Sedan" by grab3d.com — https://grab3d.com/models/vehicles/sedan/ — CC0 1.0.
+
+## Sources/CarFlopper/EngineMeshAsset.swift + EngineMeshBlob{ABC}.swift + EngineTexBlob.swift — embedded V8 engine mesh
+- Source: "V8 Engine" by grab3d.com — https://grab3d.com/models/vehicles/v8-engine/
+- Direct file: https://grab3d.com/dl/v8-engine/v8-engine.glb (downloaded 2026-11-01, 1,522,996 bytes)
+- License: CC0 1.0 Universal (public domain) as stated on the model page; no attribution required, credited here anyway.
+- Modifications: rotated so the crankshaft runs along z with the belt drive at +z (car front); 2048px base-color texture downscaled to 1024px JPEG; normal/metallic-roughness maps dropped (in-code PBR scalars instead); quantized uint16 packing with smooth normals rebuilt at load.
