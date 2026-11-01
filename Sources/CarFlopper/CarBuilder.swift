@@ -134,10 +134,14 @@ final class CarAssembly {
         (radCap.geometry as? SCNCylinder)?.materials = [Mat.steel]
         radCap.position = SCNVector3(0.25, 1.065, 1.80)
         bay.addChildNode(radCap)
-        let hose1 = SCNNode(geometry: SCNCylinder(radius: 0.035, height: 0.42))
+        // Upper hose: radiator top-front -> thermostat area at the intake
+        // front-top (verified against the V8 mesh: end touches at local
+        // (0.13,0.48,0.28), nearest vertex 0.016; old routing dived 0.235
+        // into the block and clipped the pulley plane)
+        let hose1 = SCNNode(geometry: SCNCylinder(radius: 0.035, height: 0.21))
         (hose1.geometry as? SCNCylinder)?.materials = [rubber]
-        hose1.position = SCNVector3(0.13, 1.08, 1.62)
-        hose1.eulerAngles.x = 1.1
+        hose1.position = SCNVector3(0.13, 1.14, 1.695)
+        hose1.eulerAngles.x = 1.97
         bay.addChildNode(hose1)
 
         // brake booster on the firewall
@@ -195,10 +199,13 @@ final class CarAssembly {
         }
 
         // lower radiator hose
-        let hose2 = SCNNode(geometry: SCNCylinder(radius: 0.032, height: 0.30))
+        // Lower hose: radiator bottom -> water pump inlet, front-lower block
+        // (end touches mesh at local (-0.20,0.15,0.28), nearest vertex 0.034;
+        // old end floated 6.5cm short of the sunk engine)
+        let hose2 = SCNNode(geometry: SCNCylinder(radius: 0.032, height: 0.205))
         (hose2.geometry as? SCNCylinder)?.materials = [rubber]
-        hose2.position = SCNVector3(-0.20, 0.82, 1.66)
-        hose2.eulerAngles.x = 1.2
+        hose2.position = SCNVector3(-0.20, 0.865, 1.696)
+        hose2.eulerAngles.x = 1.42
         bay.addChildNode(hose2)
 
         // strut brace across the towers
