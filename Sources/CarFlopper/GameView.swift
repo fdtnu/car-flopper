@@ -90,7 +90,7 @@ struct GameView: View {
                     vm.sceneCtrl.localPosition = SCNVector3(hpx, 0, hpz)
                     faceTarget(0, 1.55, from: hpx, hpz, pitch: -0.23)
                     NSLog("[CFREPAIR] hose-side framing parked")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { startRound(i) }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 11.0) { startRound(i) }
                     return
                 }
                 guard let st = GameContent.toolStations.first(where: { $0.tool == r.stationTool }) ?? GameContent.toolStations.first(where: { $0.tool != plan[0].stationTool }) else { NSLog("[CFREPAIR] FAIL no station for \(r.stationTool)"); return }
