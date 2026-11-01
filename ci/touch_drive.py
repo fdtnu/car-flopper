@@ -102,6 +102,35 @@ for attempt in range(4):
 a = st(); x0, y0 = f(437, 200); x1, y1 = f(600, 200)
 sh(f"idb ui swipe {x0:.0f} {y0:.0f} {x1:.0f} {y1:.0f} --duration 1 --udid {U}"); time.sleep(1)
 b = st(); RES['pan_yaw_changed'] = bool(a and b and abs(a['yaw'] - b['yaw']) > 0.01); snap('06-pan')
+# simultaneous-touch probe: repair hold + pan swipe at the SAME time.
+# Report-only this run: idb concurrent-HID behaviour is unproven, so these
+# fields do not gate PASS. Interpretation: rep held + yaw changed + prog rose
+# => simultaneous hold+look works. rep dropping during the swipe is ambiguous
+# (game cancels repair on pan, or idb serialises touches) and must be reported
+# as inconclusive for the game, not a game defect.
+if RES.get('repairing'):
+    x, y = f(*RC)
+    hold = subprocess.Popen(f"idb ui tap {x:.0f} {y:.0f} --duration 6 --udid {U}", shell=True)
+    time.sleep(2)
+    a2 = st()
+    sh(f"idb ui swipe {x0:.0f} {y0:.0f} {x1:.0f} {y1:.0f} --duration 1 --udid {U}")
+    time.sleep(1.5)
+    b2 = st()
+    hold.wait()
+    ls = [parse(l) for l in rawlog('15s').splitlines() if 'CFTOUCH] state' in l]
+    ls = [p for p in ls if p]
+    reps = [p['rep'] for p in ls]
+    progs = [p['prog'] for p in ls if p['prog'] is not None]
+    RES['simul_samples'] = len(ls)
+    RES['simul_rep_held'] = bool(reps and all(r == 1 for r in reps))
+    RES['simul_yaw_changed'] = bool(a2 and b2 and abs(a2['yaw'] - b2['yaw']) > 0.01)
+    RES['simul_prog_min'] = min(progs) if progs else None
+    RES['simul_prog_max'] = max(progs) if progs else None
+    P('SIMUL', {k: RES[k] for k in ('simul_samples','simul_rep_held','simul_yaw_changed','simul_prog_min','simul_prog_max')})
+    snap('07-simul')
+else:
+    P('SIMUL skipped: no repairing state this run')
+
 full = rawlog('600s'); open('out/touch.log', 'w').write(full)
 RES['repairFingerDown_events'] = sum(1 for l in full.splitlines() if 'repairFingerDown=1' in l)
 ok = RES.get('tool_equipped', True) and RES.get('in_range') and RES.get('repairing') and (RES.get('progress_delta') or 0) > 0 and RES['pan_yaw_changed'] and RES['repairFingerDown_events'] > 0
