@@ -779,6 +779,7 @@ final class HandRig {
         //ADLOG if nowAD - extLogT > 0.5 {
         //ADLOG     extLogT = nowAD
         //ADLOG     NSLog("[CFAUTODRIVE][CFCUFF] tool=%@ pose=(%.4f,%.4f,%.4f) wristRot=(%.4f,%.4f,%.4f,%.4f) cuff=(%.4f,%.4f,%.4f) wz=(%.4f,%.4f,%.4f) el=(%.4f,%.4f,%.4f) sh=(%.4f,%.4f,%.4f) fd=(%.4f,%.4f,%.4f)", currentTool ?? "-", Double(pose.position.x), Double(pose.position.y), Double(pose.position.z), Double(wrist.rotation.x), Double(wrist.rotation.y), Double(wrist.rotation.z), Double(wrist.rotation.w), Double(c0.x), Double(c0.y), Double(c0.z), Double(wz.x), Double(wz.y), Double(wz.z), Double(el.x), Double(el.y), Double(el.z), Double(sh.x), Double(sh.y), Double(sh.z), Double(fd.x), Double(fd.y), Double(fd.z))
+        //ADLOG     NSLog("[CFAUTODRIVE][CFFRAME] u=(%.4f,%.4f,%.4f) v=(%.4f,%.4f,%.4f)", Double(u.x), Double(u.y), Double(u.z), Double(v.x), Double(v.y), Double(v.z))
         //ADLOG }
     }
 
@@ -826,6 +827,11 @@ final class HandRig {
         }
         s += simd_distance(prev, p[n - 1])
         out.append((pos: p[n - 1], tan: simd_normalize(p[n - 1] - p[n - 2]), s: s))
+        // Run 137: the Barry-Goldman b2-b1 vector is not a tangent. Replica showed it reversed 180 deg for the last ~0.8 mm before the cut ring and degenerate at sample 0 (fallback to a fixed axis), mirroring those rings. Use the central difference of the sampled positions.
+        for i in 0..<out.count {
+            let d = out[min(out.count - 1, i + 1)].pos - out[max(0, i - 1)].pos
+            if simd_length(d) > 0.00001 { out[i].tan = simd_normalize(d) }
+        }
         return out
     }
 
