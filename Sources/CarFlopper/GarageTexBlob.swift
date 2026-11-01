@@ -9,7 +9,14 @@ enum GarageTexBlob {
     private static func img(_ b64: String) -> UIImage {
         guard let data = Data(base64Encoded: b64, options: [.ignoreUnknownCharacters]),
               let image = UIImage(data: data) else {
-            return UIImage()
+            // Loud failure: a magenta surface cannot be mistaken for a real
+            // texture in screenshots, and the log line names the regression.
+            NSLog("[GARAGETEX] texture decode FAILED - using magenta fallback")
+            let renderer = UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4))
+            return renderer.image { ctx in
+                UIColor.magenta.setFill()
+                ctx.fill(CGRect(x: 0, y: 0, width: 4, height: 4))
+            }
         }
         return image
     }
