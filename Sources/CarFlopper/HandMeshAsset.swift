@@ -8494,7 +8494,9 @@ enum HandMeshAsset {
             let ip = base.advanced(by: e.off + e.nv * 6).assumingMemoryBound(to: UInt16.self)
             for i in 0..<e.nf * 3 { idx[i] = ip[i] }
         }
-        if name == "grip" || name == "squeeze" || name == "roundGrip" || name == "roundSqueeze" {
+        if let v2 = HandPoseV2.verts(name, nv: e.nv) {
+            verts = v2
+        } else if name == "grip" || name == "squeeze" || name == "roundGrip" || name == "roundSqueeze" {
             fingerGapClose(&verts, nv: e.nv)
         }
         // smooth vertex normals from face normals
@@ -8565,7 +8567,7 @@ extension HandMeshAsset {
 
     static func shadeColors(_ name: String, nv: Int) -> [Float]? {
         let order = ["relax", "grip", "squeeze", "roundGrip", "roundSqueeze"]
-        guard nv == 8120, let k = order.firstIndex(of: name), shadeBlob.count >= 8120 * 6 else { return nil }
+        guard !HandPoseV2.has(name), nv == 8120, let k = order.firstIndex(of: name), shadeBlob.count >= 8120 * 6 else { return nil }
         var out = [Float](repeating: 1, count: nv * 4)
         shadeBlob.withUnsafeBytes { p in
             let b = p.bindMemory(to: UInt8.self)
