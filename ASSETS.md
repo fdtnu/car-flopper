@@ -29,7 +29,9 @@
 ## Sources/CarFlopper/GarageTexBlob.swift — garage floor and wall photo textures
 - Floor: "Concrete034" by ambientCG — https://ambientcg.com/view?id=Concrete034
 - Direct file: https://ambientcg.com/get?file=Concrete034_1K-JPG.zip (downloaded 2026-11-01, 3,657,575 bytes)
-- Walls: "Bricks076C" by ambientCG — https://ambientcg.com/view?id=Bricks076C
-- Direct file: https://ambientcg.com/get?file=Bricks076C_1K-JPG.zip (downloaded 2026-11-01)
-- License: CC0 1.0 Universal (public domain) as stated on ambientCG; no attribution required, credited here anyway.
-- Modifications: color maps re-encoded as 1024px JPEG; floor darkened 15%; wall map desaturated and tinted to the two in-game wall tones (light north/west, dark south/east); normal/roughness/AO maps dropped (in-code PBR scalars instead).
+- Walls: "Concrete Block Wall" by Poly Haven — https://polyhaven.com/a/concrete_block_wall
+- Direct file: https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_block_wall/concrete_block_wall_diff_1k.jpg (downloaded 2026-11-02, 848,947 bytes)
+- License: CC0 1.0 Universal (public domain) as stated by ambientCG (floor) and Poly Haven (walls); no attribution required, credited here anyway.
+- Replaced 2026-11-02: ambientCG Bricks076C read as rough castle masonry in-game; swapped for concrete block wall brightened/desaturated into painted cinderblock.
+- Modifications: color maps re-encoded as 1024px JPEG; floor darkened 45%; wall map desaturated and brightened to the two in-game painted-wall tones (light north/west, dark south/east); normal/roughness/AO maps dropped (in-code PBR scalars instead).
+
