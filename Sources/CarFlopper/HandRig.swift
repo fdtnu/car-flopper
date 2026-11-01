@@ -101,6 +101,7 @@ final class HandRig {
         // rotated so fingers point forward (-z), palm down (-y).
         let handRelax = HandMeshAsset.node("relax", material: skin)
         let handGrip = HandMeshAsset.node("grip", material: skin)
+        handGrip.geometry = HandShadeV2.shaded(handGrip.geometry, pose: "grip")
         for h in [handRelax, handGrip] {
             h.eulerAngles.x = -.pi / 2
             h.scale = SCNVector3(1.0, 1.0, 1.0)
@@ -119,15 +120,15 @@ final class HandRig {
         // morpher blends them - the fingers visibly squeeze while working.
         // morpher is a property of the NODE (SCNNode.morpher), verified
         // against Apple's SceneKit docs (var morpher: SCNMorpher?)
-        if let relaxGeo = HandMeshAsset.node("squeeze", material: skin).geometry {
+        if let relaxGeo = HandShadeV2.shaded(HandMeshAsset.node("squeeze", material: skin).geometry, pose: "squeeze") {
             let m = SCNMorpher()
             m.targets = [relaxGeo]
             handGrip.morpher = m
         }
         narrowGripGeometry = handGrip.geometry
-        narrowSqueezeGeometry = HandMeshAsset.node("squeeze", material: skin).geometry
-        roundGripGeometry = HandMeshAsset.node("roundGrip", material: skin).geometry
-        roundSqueezeGeometry = HandMeshAsset.node("roundSqueeze", material: skin).geometry
+        narrowSqueezeGeometry = HandShadeV2.shaded(HandMeshAsset.node("squeeze", material: skin).geometry, pose: "squeeze")
+        roundGripGeometry = HandShadeV2.shaded(HandMeshAsset.node("roundGrip", material: skin).geometry, pose: "roundGrip")
+        roundSqueezeGeometry = HandShadeV2.shaded(HandMeshAsset.node("roundSqueeze", material: skin).geometry, pose: "roundSqueeze")
         handGrip.isHidden = true
         self.handRelax = handRelax
         self.handGrip = handGrip
