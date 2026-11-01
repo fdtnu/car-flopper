@@ -4,8 +4,10 @@ import SceneKit
 // MARK: - Hood underside liner, derived offline from the CC0 hood mesh
 // (grab3d.com, public domain): same triangulation offset 15mm toward the
 // underside along the downward vertex normals so it follows the panel curvature with no
-// clipping. Dark charcoal, matte - reads as the stamped liner under the
-// open hood. Child of the hood node so it hinges with it.
+// clipping, then inset 5% in x/z about the hood center so a red painted
+// perimeter of the hood underside stays visible around it. Dark charcoal,
+// matte - reads as the stamped liner under the open hood. Child of the hood
+// node so it hinges with it.
 
 enum HoodLinerAsset {
 
@@ -15,63 +17,63 @@ enum HoodLinerAsset {
     private static let qspan = SIMD3<Float>(1.48696, 0.22625, 1.79285)
 
     private static let b64: String =
-        "hP34eQAAwL5okwAABIDimwAASEFqkwAAewL4eQAAhP1zdJUiu77kjZYi/39clpYiREHkjZYiewJzdJYihP2CbipFur70hytF/n9s" +
-        "kCtFQkHzhytFewKCbitFhP2xagdZuL4ihAdZ+3+ajAdZQEEghAdZewKxagdZhP1Xar1avb7Ig71aAIBBjL1aRUHIg71aewJXar1a" +
-        "g/3EaYhdu740g4hd/3+ti4hdRUE1g4hdfALEaYhdf/0LafZgub58gvZgAID1ivZgR0F8gvZggAILafZgd/0IaKRls756gaRl/X/y" +
-        "iaRlSUF5gaRliAIIaKRlcf2SZ71ns74Dgb1nAIB8ib1nT0EDgb1njgKSZ71nZf29ZnZrrb4ugHZrAICniHZrVUEugHZrmgK9ZnZr" +
-        "Sf0qZUZynr6ZfkZy/38Sh0ZyYkGZfkZytgIqZUZyH/1OY+p5ib6+fOl5/383hel5d0G+fOp54AJOY+p5E/4vYTOCA7+gejGC/38Z" +
-        "gzCC/ECgejGC7AEvYTOCev/zXlCKtr9ieFCK/3/cgE6KSUBjeE+KhQDyXlKK///tW9CT+L9eddGT/3/XfdGTB0BeddGTAADtW9KT" +
-        "cP+9WLqcsb8tcryc/3+ler2cTkAtcrycjwC8WLuc3/1XVW2l6L7HbnGlAIA/d3OlFkHHbnGlIAJXVW6lqPtFUtWsyb20a9ms/H8q" +
-        "dN2sLkKxa9usVgREUtesV/vkUbetqL1Ta7itBIDNc7mtXkJVa7itqATkUbat6/qQTlu1br0AaFu1AIB4cFy1kEIAaFu1FAWQTlu1" +
-        "nPqASyu8Rr3xZCu8AIBpbSy8uELwZCy8YwWASyu8V/rVSPzBJL1GYv3B/3++av3B2kJFYv3BpwXVSPzBIfqrRqvGCL0bYKvG/3+U" +
-        "aKzG9UIbYKzG3gWrRqvG+fkTRRnK9LyDXhnK/3/7ZhrKCUOCXhnKBgYTRRnK4fkZRDHM6byJXTHMAIABZjLMFkOJXTHMHgYZRDHM" +
-        "xvn4Qp3O4LxoXJ3OBIDhZJ7OJ0NqXJ3OOQb4QpzOWPgVM/nxIbyCTP/x/X/5VP/x10OATP/xpwcPMwLyW/iBLa32JrymRsj2AIAf" +
-        "T8j22UOlRsj2pQf0LOT2YPhSHPX6KbzENfX6AIA/PvX600N1NQP7oAfRGw37Lbx0GX/+/X/vIX/+yENzGX/+mgcAAH/+MeezVn0U" +
-        "ve8QVUITAPdFWcsOyQjBVQAPLhDOVEMTxBjFU84UIjsPVaUUkV0SVaUU/38SVaUUbqISVaUU3MQSVaUUQOSAi3MIgu1+i+sGVfXL" +
-        "i3UCkRKJi+4Gzht5i3UIJD2Ei3IIkl6Ei3II/3+Ei3IIbaGEi3II28KEi3II9eYTLWYTde/JLEsSzvVNLukNvAkDLnsOuBAPLQUS" +
-        "BRkSLWYTIztALVsTkV1ALVsT/39ALVsTbqJALVsT3MQ/LVwT8uORad4Fb+yCaXYErvLLa1wAzhOYaYAEHByLaeAFJD3OadEFkl7O" +
-        "adEF/3/OadEFbaHOadEF28LOadEF/3+XYRJp/3///xJp/n9BZYlKq2s/ZThLkmY/ZUxNuGNDZTBRYGJJZZlYbWJCZY15v2NBZfiA" +
-        "l2Y/ZduErmtDZfaGAIBBZZuHVJQ/Ze2GbZk/ZdeER5xDZfWAn51JZYx5kp1CZZhYQJxBZS1RaJk/ZUhNUZRDZS9L/n+zcb9Aa2Vw" +
-        "cbVBdl5+cYlEeVrfcclJilh9cpVTyVjMcZF+kVqtcWKIgl6CcaeNb2XccZmQAICzcWaRlJpwcW+QiaF+cZuNhqXfcVyIdad9co9+" +
-        "NqfMcZNTbqWtccNJfaGCcX5EkJrccYxB+n+DlEM7ZWLxkk48z1nRk8s/IFUclTVGIlN2llFRO1MOlNuAN1VAlBGMAVr+k4KSgmKI" +
-        "lfaVBICDlOKWmp3xkteVMKbRk1qS36ocle+L3ax2ltKAxKwOlElRyKpAlBRG/qX+k6M/fZ2IlS88+n8R5Vs/CGMV5lNAFl2L5MdC" +
-        "3FnO5GZHH1ib5G5RN1gE576A81mq5eCKSF1e5IaPJWN/4/CRBIAR5cmS95wV5tGR6aKL5F2PI6bO5L+K4Keb5LWAyKcE52ZRDKaq" +
-        "5URHt6Je5J9C2px/4zVA/n/F8SdCoWXu8Q5DeV+U8XZFKFy/8TVKkVre8aBT0FqO8oV+QFzx8faHhl+P8bqMpGWC8UCPAIDF8f6P" +
-        "Xpru8RaPhqCU8a+M16O/8fCHbqXe8YR+L6WO8p5Tv6Px8S9KeaCP8WpFW5qC8eVC/n9m/M5Ktmtn/HhLw2Zk/HlNCmRl/ERRxGJn" +
-        "/JtY0mJt/It5EWRo/OOAyGZk/K+EuGtj/LWGAIBm/FeHSZRn/KyGPJlk/KuE9Ztl/OCAO51n/Ip5LZ1t/JpY7pto/EFRN5lk/HVN" +
-        "R5Rj/HBL/3/+nOmT/3/a8emT/n/vo7mPV2maohmQFGWeoFiR6WOFoPCTKGW2oJqWXGkmpAGYAIDuoxiYqJaaoreX65qeoHqWFpyF" +
-        "oOKT15q2oDeRo5YmpM+P/n+tvEaOgWQQvG6OFl4GuX6PA1yOtRSUoF71t46YimTivGaZAICsvIuZfpsPvGOZ6aEHuVOY/KOPtb2T" +
-        "X6H0t0KPdZvkvGuO/n+68YySo2Tx8bKSumAB7eCSfmCc6hSUQ2EU7iyVrGQc8SKVAIC58UWVXJvw8R+VRZ8C7fCUgZ+b6r2Tu54T" +
-        "7qSSU5se8bCS/n/k8VOSamkc8nuSg2Ws7uqRZ2R77vCTl2WU7geWb2mQ8KCVAIDj8X+VlZYc8lWVfJqs7ueVmJt77uKTaJqU7sqR" +
-        "kJaQ8DCSfou0PP//OKHuOPT/QIuaOyv8eqHOORP8wopqOyL88qGCOBr8UooLPev7YaLOOef7/omhP5f7tqI4PJX7x4mFP7/74qJS" +
-        "PKz7tIlZU8v2+aJPUJP2tYkPWnzw+aKKVm7wtYn2XAzq+KJpWQzqtYniX4zj+KJaXIzjtonPYg3d+KJKXw3dtYm6ZY/W+KI2Yo/W" +
-        "tomnaA7Q+KIhZQ/Qtomoa5DJ+KIlaJDJtomrbhPD+KIraxPDtommcZa8+KIobpa8tomRdBm2+KIXcRm2tolpd5yv+KLxc5yvtoku" +
-        "eh+p+KLFdh+ptonTfKKi+KJxeaKitolWfyac96L6eyWctompgaqV96JRfqqVtonKgy2P96JvgC2PtonEhbGI+KJngrGItomNhzSC" +
-        "+KIohDSCtok0ibd7+KLJhbd7tonPijt1+KJkhzt1tolYjL5u+KLuiL5utonSjUFo+KJpikBotok8j8Nh+KLTi8NhtomYkEZb+KIv" +
-        "jUZbtonekclU+KJ1jslUtokfk0tO+KK1j0tOtolflM5H+KL1kM5HtomJlVFB+KIgklFBtomnltM6+KI9k9M6tonEl1c0+KJblFc0" +
-        "tonhmNkt+KJ4ldktton/mVsn+KKWllsntokWm94g+KKtl94gtokfnGAa+KK2mGAatokoneMT+KK/meMTtokynmYN+KLImmYNyIkE" +
-        "ny4I5qKgmy4IfosWKrr+M6EIJ7r+uaIGKIn+5KOQKhb+x6QpLnf9ZKVmMsH8yKX7N7L72KU+TcX22KXPU3vw2KW8VgDq2KWpWYXj" +
-        "2KWXXArd2KWBX47W2KVqYhPQ2KVtZZXJ2KVzaBnD2KVva5u82KVebh622KU6caCv2KUOdCOp2KW9dqei2aVPeSqc2aWme62V2aXC" +
-        "fTGP2aW3f7WI2aV3gTiC2KUTg7t72KWuhD112KU4hsBu2KWzh0No2KUdicZh2KV6ikhb2KXAi8tU2KUAjU1O2KVAjtFH2KVrj1NB" +
-        "2KWIkNY62KWmkVg02KXDktot2KXgk14n2KX4lOAg2KUBlmIa2KUKl+UT2KUUmGQNxqXsmCgIHYydnDUIC4zKm2kNC4zBmuUTC4y4" +
-        "mWIaC4yumOAgC4yXl14nC4x5ltstC4xclVg0C4w+lNY6C4wik1NBC4z2kdFHC4y2kE5OC4x3j8tUC4wwjkhbC4zUjMZhC4xqi0No" +
-        "C4zvicFuC4xmiD11C4zMhrt7C4wlhTiCC4xbg7WIC4xhgTKPC4xAf62VC4ztfCqcC4xoeqeiC4zEdySpC4z/dKGvC4wnch62C4w7" +
-        "b5u8C4xAbBnDC4w8aZfJC4w8ZhTQC4xSY47WC4xpYArdC4yAXYXjC4yXWgHqC4ysV3vwC4wmUcH29IaaO8j7a4eaNeT8FYg2MZn9" +
-        "BomILTH+QIr8Kpn+wl6mOf//fXT8O/T/h15qOCz8vnT8PBP8C14bOCP8O3XSOxn8nV2cOe37q3U8Peb7SF0cPJj7AHa+P5T7F133" +
-        "O8D7MnbgP6v7BV3JT8z2SnbgU5L2B12AVn3wS3YYWm7wB11jWQzqSnbyXAzqB11PXIzjSnbeX4zjB11AXw3dSnbLYg3dB10wYo/W" +
-        "Sna2ZY7WB10iZQ7QSnalaA7QB10kaJDJSXana5DJB10qaxPDSXaqbhPDB10nbpa8SXamcZa8B10VcRm2SXaSdBm2B13vc5yvSXZo" +
-        "d5yvB121dh+pSXYoeh+pB11oeaOiSXbPfKGiCF35eyacSXZWfyWcCF1PfqqVSXaogamVCF1zgC2PSXbMgy2PB11sgrKISXbIhbGI" +
-        "B10ohDSCSXaNhzSCB13Mhbd7SXY3ibd7B11ihzt1SXbOijt1B13tiL5uSXZXjL5uB11pikFoSXbSjUBoB13Ti8NhSXY8j8NhB10v" +
-        "jUZbSXaYkEZbB111jslUSXbekclUB121j0tOSXYfk0tOB131kM5HSXZflM5HB10gklFBSXaJlVFBB109k9M6SXanltM6B11blFc0" +
-        "SXbEl1c0B114ldktSXbhmNktB12WllsnSXb/mVsnB12tl94gSXYWm94gB122mGAaSXYfnGAaB12/meMTSXYoneMTB13JmmYNSXYx" +
-        "nmYNGV2hmy4IN3YEny4I0F4HJ7r+hXQWKrr+B3ZfK4f+LXcbLhX+DXjZMXn9p3gsNsX8DHnhO7f79HMfUcP29HOrV3zw9HOTWgHq" +
-        "9HN8XYXj9HNlYArd9HNOY47W9HM7ZhTQ9HM8aZfJ9HM/bBnD9HM7b5u89HMnch629HP+dKGv9HO+dySp9HNkeqei9HPsfCqc9HM/" +
-        "f62V9HNigTKP9HNfg7WI9HMlhTiC9HPPhrt79HNmiD119HPvicFu9HNqi0No9HPUjMZh9HMwjkhb9HN3j8tU9HO2kE5O9HP2kdFH" +
-        "9HMhk1NB9HM+lNY69HNclVg09HN5ltst9HOXl14n9HOumOAg9HO4mWIa9HPBmuUT9HPKm2sN4nOdnDUIOVrsmCgIJ1oTmGYNJ1oK" +
-        "l+UTJ1oBlmIaJ1r4lOAgJ1rgk14nJ1rDktotJ1qmkVg0J1qIkNY6J1prj1NBJ1pAjtFHJ1oAjU1OJ1rAi8tUJ1p6ikhbJ1odicZh" +
-        "J1qzh0NoJ1o3hsBuJ1qshD11J1oZg7t7Jlp5gTiCJlq+f7WIJlrIfTGPJlqle62VJlpLeSqcJ1qwdqeiJ1r+cyOpJ1o3caCvJ1pe" +
-        "bh62J1pva5u8J1pyaBnDJ1psZZXJJ1ppYhPQJ1p7X47WJ1qNXArdJ1qfWYXjJ1q3VgDqJ1rOU3vwJ1pATcb2OFrBN8P7r1rRMeH8" +
-        "W1uKLZj9UVwBKjL+kF2sJ5v+IHhFAG19nnsaAGx94IAHAGt9IIYsAGx934dFAG19IHhFAEt9vnojAFN9AIAHAFN9QYUjAFN934dF" +
+        "Pff4eWYGnbtok2YGBIDim2YGa0Rqk2YGwgj4eWYGPfdzdEAnmLvkjUEn/39clkEnZ0TkjUEnwghzdEEnPfeCbhtIl7v0hxxI/n9s" +
+        "kBxIZUTzhxxIwgiCbhxIPfexavpalbsihPpa+3+ajPpaY0QghPpawgixavpaPfdXappcmrvIg5pcAIBBjJpcaETIg5pcwghXappc" +
+        "PPfEaUFfmLs0g0Ff/3+ti0FfaEQ1g0FfwwjEaUFfOfcLaYNilrt8goNiAID1ioNiakR8goNixggLaYNiMfcIaPVmkLt6gfVm/X/y" +
+        "ifVmbER5gfVmzggIaPVmK/eSZ/NokLsDgfNoAIB8ifNocUQDgfNo1AiSZ/NoIPe9Zn1si7sugH1sAICniH1sd0QugH1s3wi9Zn1s" +
+        "BfcqZfVyfLuZfvVy/38Sh/Vyg0SZfvVy+ggqZfVy3fZOYzh6abu+fDd6/383hTd6l0S+fDh6IglOYzh6xfcvYReC3LugehWC/38Z" +
+        "gxSCI0SgehWCOggvYReCGvnzXsyJhrxieMyJ/3/cgMqJeUNjeMuJ5QbyXs6JmfntW9KSxbxeddOS/3/XfdOSOkNeddOSZgbtW9SS" +
+        "Efm9WEqbgrwtckyb/3+lek2bfUMtckyb7ga8WEublPdXVY6jw7vHbpGjAIA/d5OjO0THbpGjawhXVY+jefVFUpeqsrq0a5uq/H8q" +
+        "dJ6qRUWxa52qhQpEUpmqLPXkUW6rk7pTa2+rBIDNc2+rc0VVa2+r0wrkUW2rxvSQTrCyXLoAaLCyAIB4cLGyokUAaLCyOQuQTrCy" +
+        "e/SASym5NrrxZCm5AIBpbSq5yEXwZCq5hAuASym5OfTVSK++FbpGYrC+/3++arC+6UVFYrC+xQvVSK++BvSrRiLD+7kbYCLD/3+U" +
+        "aCPDAkYbYCPD+QurRiLD4PMTRWTG6LmDXmTG/3/7ZmXGFUaCXmTGHwwTRWTGyfMZRGHI3bmJXWHIAIABZmLIIkaJXWHINgwZRGHI" +
+        "r/P4Qq7K1bloXK7KBIDhZK/KMkZqXK7KUAz4Qq7KVPIVM0bsH7mCTEzs/X/5VEzs2UaATEzsqw0PM07sVvKBLb7wJLmmRtfwAIAf" +
+        "T9fw20alRtfwqg30LPLwW/JSHM/0J7nENc/0AIA/Ps/01UZ1Ndz0pQ3RG+b0K7l0GSz4/X/vISz4y0ZzGSz4nw0AACz4COKzVt0Z" +
+        "J+oQVbIYDfFFWXQUvw7BVaYUxRXOVLMY7R3FUyoakz4PVQMaSl8SVQMa/38SVQMataASVQMaa8ESVQMaPd+Ai20OCOh+i/kMd+/L" +
+        "i7wIChiJi/sM0CB5i28OfECEi2wOPmCEi2wO/3+Ei2wOwZ+Ei2wOg7+Ei2wOz+ETLdQY4unJLMcX6u9NLp0Tpg8DLigUSBYPLYQX" +
+        "Kx4SLdQYlD5ALckYSl9ALckY/39ALckYtaBALckYa8E/LcoY896RafkLA+eCaaMK8uzLa74GNxmYaa0KGyGLafsLfEDOae0LPmDO" +
+        "ae0L/3/Oae0LwZ/Oae0Lg7/Oae0L/3+XYTdq/3///zdq/n9BZTVNr2w/ZdtN12c/ZdVPImVDZYdT22NJZZFa6GNCZd95KWVBZeuA" +
+        "3Gc/ZZ2EsmxDZZ2GAIBBZTmHUJM/ZZSGKJg/ZZmE3ZpDZeiAJJxJZd55F5xCZZBa1ppBZYRTI5g/ZdFPTZNDZdNN/n+zcehDv2Zw" +
+        "cdJEI2B+cYJHWVzfcX9Mg1p9cs1Vv1rMcaN+cFytcfaHL2CCcfiMw2bcccSPAICzcYeQQJlwcZyP3J9+ce2MpqPfcfGHfKV9cqF+" +
+        "QKXMcctVj6OtcXlM0J+CcXdHPJnccatE+n+DlLM+4GPxkrA/uFvRkwFDRVcclRhJYFV2lqZTeFUOlNCAW1dAlHaL51v+k5WR+2OI" +
+        "ld2UBICDlL2VH5zxkr+UR6TRk2+RuqgclVaLn6p2lseAh6oOlJ9TpKhAlPlIGKT+k9tCBJyIlZM/+n8R5ZZCe2QV5oJD1V6L5NZF" +
+        "xFvO5DpKHVqb5MJTNFoE57SA2luq5VWKBF9e5L+OlmR/4wqRBIAR5diRhJsV5u2QKqGL5JiOO6TO5DWK4qWb5KyAy6UE57pTJaSq" +
+        "5RpK+6Be5LBFaZt/42VD/n/F8T5F82bu8RpGGWGU8WNI812/8eVMcFze8dhVrFyO8ph+Cl7x8ZCHJmGP8ReM9WaC8X2OAIDF8TGP" +
+        "DJnu8VWO5p6U8QyMDKK/8YqHj6Pe8Zd+U6OO8tZV9aHx8eBM2Z6P8VhICpmC8fNF/n9m/HdNumxn/BhOBmhk/P9PcGVl/JpTOmRn" +
+        "/JNaR2Rt/N15d2Vo/NeAC2hk/HOEvGxj/F+GAIBm/PmGRZNn/FaG+Zdk/G+Ej5pl/NWAxZtn/Nx5uJtt/JJaiJpo/JdT9Jdk/PxP" +
+        "Q5Nj/BFO/3/+nOqS/3/a8eqS/n/vo++OeWqaokuPbWaeoHqQUWWFoPGSgGa2oHiVfmompM2WAIDuo+OWhpWaooeWkpmeoFqVrpqF" +
+        "oOOSf5m2oFqQgZUmpASP/n+tvI+N4WUQvLWNyF8GubeO0F2OtROTS2D1t1OX6WXivCGYAICsvESYHpoPvB6YN6AHuRuXL6KPtcCS" +
+        "tJ/0t36OFprkvLKN/n+68Z6RAWbx8cKRSmIB7e6REWKc6hOTzGIU7h2UCmYc8ROUAIC58TSU/pnw8RCUtZ0C7eST7p2b6sCSMp0T" +
+        "7rWR9Zke8cGR/n/k8WiRi2oc8o6R1mas7gSRyGV77vGS6WaU7u2UkGqQ8IuUAIDj8WyUdJUc8kSUKZms7s6UN5p77uOSFpmU7uaQ" +
+        "b5WQ8EeR64q0PJj5j5/uOI75sIqaO/X1zZ/OOd/1OIpqO+31P6CCOOX1zokLPbn1qaDOObX1fomhP2n1+qA4PGf1SomFP4/1I6FS" +
+        "PH31OIlZU9rwOaFPUKXwOYkPWtzqOaGKVs/qOYn2XL7kOKFpWb7kOYniX5LeOKFaXJLeOonPYmbYOKFKX2bYOYm6ZTvSOKE2YjvS" +
+        "OomnaA3MOKEhZQ7MOomoa+LFOKElaOLFOomrbri/OKEra7i/OommcY65OKEobo65OomRdGSzOKEXcWSzOolpdzqtOKHxczqtOoku" +
+        "ehCnOKHFdhCnOonTfOagOKFxeeagOolWf72aN6H6e7yaOompgZSUN6FRfpSUOonKg2qON6FvgGqOOonEhUGIOKFngkGIOomNhxiC" +
+        "OKEohBiCOok0ie57OKHJhe57OonPisV1OKFkh8V1OolYjJtvOKHuiJtvOonSjXFpOKFpinBpOok8j0ZjOKHTi0ZjOomYkBxdOKEv" +
+        "jRxdOonekfJWOKF1jvJWOokfk8dQOKG1j8dQOolflJ1KOKH1kJ1KOomJlXNEOKEgknNEOomnlkg+OKE9k0g+OonElx84OKFblB84" +
+        "OonhmPQxOKF4lfQxOon/mckrOKGWlskrOokWm58lOKGtl58lOokfnHUfOKG2mHUfOokonUsZOKG/mUsZOokyniETOKHImiETS4kE" +
+        "nysOJ6GgmysO64oWKmT4ip8IJ2T4/aAGKDX4GaKQKsj38KIpLjH3haNmMoT25KP7N4L19KM+TdTw9KPPU9vq9KO8VrPk9KOpWYve" +
+        "9KOXXGPY9KOBXzrS9KNqYhLM9KNtZefF9KNzaL6/9KNva5O59KNebmmz9KM6cT6t9KMOdBSn9KO9duug9aNPecGa9aOme5eU9aPC" +
+        "fW6O9aO3f0WI9aN3gRuC9KMTg/F79KOuhMZ19KM4hp1v9KOzh3Np9KMdiUlj9KN6ih5d9KPAi/RW9KMAjclQ9KNAjqBK9KNrj3VE" +
+        "9KOIkEs+9KOmkSA49KPDkvUx9KPgk8wr9KP4lKEl9KMBlnYf9KMKl0wZ9KMUmB8T4qPsmCYOgoudnDIOcYvKmyMTcYvBmkwZcYu4" +
+        "mXYfcYuumKElcYuXl8wrcYt5lvYxcYtclSA4cYs+lEs+cYsik3VEcYv2kaBKcYu2kMpQcYt3j/RWcYswjh5dcYvUjEljcYtqi3Np" +
+        "cYvviZ1vcYtmiMZ1cYvMhvF7cYslhRuCcYtbg0WIcYthgW+OcYtAf5eUcYvtfMGacYtoeuugcYvEdxWncYv/dD+tcYsncmmzcYs7" +
+        "b5O5cYtAbL6/cYs8aenFcYs8ZhPMcYtSYzrScYtpYGPYcYuAXYvecYuXWrTkcYusV9vqcYsmUdHwm4aaO5f1DIeaNaX2roc2MVH3" +
+        "koiILeH3vYn8KkT4a2CmOZj5EHX8O475M2BqOPb1TnX8PN/1vl8bOO71xXXSO+T1VV+cObr1L3Y8PbT1BF8cPGr1gHa+P2b11l73" +
+        "O5D1r3bgP3z1xV7JT9vwxnbgU6Twx16AVt3qx3YYWs/qx15jWb7kxnbyXL7kx15PXJLexnbeX5Lex15AX2bYxnbLYmbYx14wYjvS" +
+        "xna2ZTrSx14iZQ3MxnalaA3Mx14kaOLFxXana+LFx14qa7i/xXaqbri/x14nbo65xXamcY65x14VcWSzxXaSdGSzx17vczqtxXZo" +
+        "dzqtx161dhCnxXYoehCnx15oeeegxXbPfOWgyF75e72axXZWf7yayF5PfpSUxXaogZOUyF5zgGqOxXbMg2qOx15sgkKIxXbIhUGI" +
+        "x14ohBiCxXaNhxiCx17Mhe57xXY3ie57x15ih8V1xXbOisV1x17tiJtvxXZXjJtvx15pinFpxXbSjXBpx17Ti0ZjxXY8j0Zjx14v" +
+        "jRxdxXaYkBxdx151jvJWxXbekfJWx161j8dQxXYfk8dQx171kJ1KxXZflJ1Kx14gknNExXaJlXNEx149k0g+xXanlkg+x15blB84" +
+        "xXbElx84x154lfQxxXbhmPQxx16WlskrxXb/mckrx16tl58lxXYWm58lx162mHUfxXYfnHUfx16/mUsZxXYonUsZx17JmiETxXYx" +
+        "niET2F6hmysOtHYEnysOeWAHJ2T4GHUWKmT4h3ZfKzP4nncbLsf3c3jZMTP3BXksNoj2ZXnhO4f1jnQfUdPwjnSrV9zqjnSTWrTk" +
+        "jnR8XYvejnRlYGPYjnROYzrSjnQ7ZhPMjnQ8aenFjnQ/bL6/jnQ7b5O5jnQncmmzjnT+dD+tjnS+dxWnjnRkeuugjnTsfMGajnQ/" +
+        "f5eUjnRigW+OjnRfg0WIjnQlhRuCjnTPhvF7jnRmiMZ1jnTviZ1vjnRqi3NpjnTUjEljjnQwjh5djnR3j/RWjnS2kMpQjnT2kaBK" +
+        "jnQhk3VEjnQ+lEs+jnRclSA4jnR5lvYxjnSXl8wrjnSumKEljnS4mXYfjnTBmkwZjnTKmyUTfXSdnDIOHVzsmCYOC1wTmCETC1wK" +
+        "l0wZC1wBlnYfC1z4lKElC1zgk8wrC1zDkvUxC1ymkSA4C1yIkEs+C1xrj3VEC1xAjqBKC1wAjclQC1zAi/RWC1x6ih5dC1wdiUlj" +
+        "C1yzh3NpC1w3hp1vC1yshMZ1C1wZg/F7Clx5gRuCCly+f0WIClzIfW6OClyle5eUClxLecGaC1ywduugC1z+cxSnC1w3cT6tC1xe" +
+        "bmmzC1xva5O5C1xyaL6/C1xsZefFC1xpYhLMC1x7XzrSC1yNXGPYC1yfWYveC1y3VrPkC1zOU9vqC1xATdXwHFzBN5P1jVzRMaL2" +
+        "MF2KLVD3Gl4BKuL3SV+sJ0b4IHhFAG19nnsaAGx94IAHAGt9IIYsAGx934dFAG19IHhFAEt9vnojAFN9AIAHAFN9QYUjAFN934dF" +
         "AFx9IHhHAA19gnonABt9w38IABp9BIUiABt934dGACh9IHhIAOB8AnouAOJ8Q38KAOF8hIQeAOF834dIAOR8IHhJAKt89HokAK98" +
         "NYALALB8doUpALB834dJALF8IHhKAJx81XomAKB8F4ALAKF8WIUoAJ9834dJAKF8IHhKAIJ84XomAIp8IoAMAIx8Y4UpAIl834dK" +
         "AIt8H3hLAHB8aXosAHl8qn8MAH187IQlAHl834dLAHd8H3hMAFh8/HomAGN8PoANAGh8gIUrAGF84IdLAFx8HnhNADd8/3onAEZ8" +
@@ -254,7 +256,7 @@ enum HoodLinerAsset {
                                     primitiveCount: nf, bytesPerIndex: 2)
         let geo = SCNGeometry(sources: [vSrc, nSrc], elements: [el])
         let m = SCNMaterial()
-        m.diffuse.contents = UIColor(red: 0.12, green: 0.12, blue: 0.13, alpha: 1)
+        m.diffuse.contents = UIColor(red: 0.18, green: 0.18, blue: 0.19, alpha: 1)
         m.roughness.contents = 0.92
         m.isDoubleSided = true
         geo.materials = [m]
