@@ -577,7 +577,7 @@ final class HandRig {
     // the mesh's own cut plane at any flex angle, hugs +wz just past the cut,
     // then bends to the forearm axis inside the opaque sleeve, curves at the
     // two-bone elbow and escapes off the lower-right frame edge.
-    private static let sleeveProf: [Float] = [0.831, 0.764, 0.678, 0.625, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.669, 0.751, 0.803, 0.864, 0.953, 1.003, 1.027, 1.058, 0.990, 1.057, 0.980, 0.922, 0.901, 0.860, 0.837, 0.833, 0.840, 0.861, 0.856, 0.816, 0.894, 0.836, 0.926, 0.926, 0.877]
+    private static let sleeveProf: [Float] = [0.964, 0.887, 0.791, 0.711, 0.647, 0.620, 0.620, 0.620, 0.620, 0.620, 0.620, 0.624, 0.657, 0.698, 0.748, 0.804, 0.864, 0.986, 1.108, 1.228, 1.319, 1.319, 1.368, 1.429, 1.429, 1.344, 1.226, 1.111, 0.999, 0.948, 0.935, 0.940, 0.966, 1.002, 1.011, 1.011, 0.990, 1.010, 1.010, 0.993]
     private static func sleeveProfile(_ a: Float) -> Float {
         let n = sleeveProf.count
         var x = a / (2 * Float.pi) * Float(n) - 0.5
