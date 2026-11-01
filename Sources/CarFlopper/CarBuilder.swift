@@ -18,7 +18,7 @@ final class CarAssembly {
         "wheelRR": SCNVector3(0.14305, 0, 0),
         "door": SCNVector3(-0.05210, 0, -0.550),
         "exhaust": SCNVector3(0.050912, 0, -0.050912),
-        "engine": SCNVector3(0, 0.120, 0),
+        "engine": SCNVector3(0, 0.550, 0),
         "windshield": SCNVector3(-0.60, 0, 0.015),
     ]
     static let repairNormalLocal: [String: SCNVector3] = [
@@ -103,52 +103,17 @@ final class CarAssembly {
         firewall.position = SCNVector3(0, 0.85, 0.62)
         bay.addChildNode(firewall)
 
-        // engine block (the repairable part)
-        let engine = SCNNode(geometry: SCNBox(width: 0.52, height: 0.24, length: 0.80, chamferRadius: 0.03))
-        (engine.geometry as? SCNBox)?.materials = [Mat.flat(0.48, 0.49, 0.53, rough: 0.5, metal: 0.6)]
-        engine.position = SCNVector3(0, 0.88, 1.30)
+        // engine (the repairable part): real modeled V8 from the CC0 pack
+        // (grab3d.com "Cozy Car Parts & Garage Kit" - see ASSETS.md). Block,
+        // heads, valve covers, air cleaner, plug wires, manifolds and belt
+        // drive come from the model; battery, radiator, hoses and bay details
+        // below stay authored. Local space: oil pan bottom y = 0, belt drive
+        // at +z, so the node sits on the bay floor.
+        let engine = EngineMeshAsset.node()
+        engine.position = SCNVector3(0, 0.76, 1.315)
         engine.name = "part_engine"
         bay.addChildNode(engine)
         partNodes["engine"] = engine
-
-        // cylinder head + red valve cover
-        let head = box(0.46, 0.10, 0.74, 0.02, [aluminum])
-        head.position = SCNVector3(0, 1.05, 1.30)
-        bay.addChildNode(head)
-        let cover = box(0.34, 0.09, 0.70, 0.035, [Mat.flat(0.58, 0.12, 0.12, rough: 0.4, metal: 0.3)])
-        cover.position = SCNVector3(0, 1.135, 1.30)
-        bay.addChildNode(cover)
-
-        // ignition coils + plug wires
-        for i in 0..<4 {
-            let z: Float = 1.02 + Float(i) * 0.185
-            let coil = box(0.09, 0.06, 0.12, 0.012, [blackPlastic])
-            coil.position = SCNVector3(-0.19, 1.13, z)
-            bay.addChildNode(coil)
-            let wire = SCNNode(geometry: SCNCylinder(radius: 0.012, height: 0.12))
-            (wire.geometry as? SCNCylinder)?.materials = [wireRed]
-            wire.position = SCNVector3(-0.24, 1.08, z)
-            wire.eulerAngles.z = 0.5
-            bay.addChildNode(wire)
-        }
-
-        // intake plenum, throttle body, intake tube, air box
-        let plenum = box(0.16, 0.10, 0.52, 0.03, [blackPlastic])
-        plenum.position = SCNVector3(0.19, 1.10, 1.28)
-        bay.addChildNode(plenum)
-        let throttle = SCNNode(geometry: SCNCylinder(radius: 0.05, height: 0.09))
-        (throttle.geometry as? SCNCylinder)?.materials = [aluminum]
-        throttle.position = SCNVector3(0.19, 1.09, 1.60)
-        throttle.eulerAngles.x = .pi / 2
-        bay.addChildNode(throttle)
-        let tube1 = SCNNode(geometry: SCNCylinder(radius: 0.045, height: 0.30))
-        (tube1.geometry as? SCNCylinder)?.materials = [rubber]
-        tube1.position = SCNVector3(0.28, 0.99, 1.68)
-        tube1.eulerAngles.z = -0.9
-        bay.addChildNode(tube1)
-        let airbox = box(0.24, 0.17, 0.28, 0.04, [blackPlastic])
-        airbox.position = SCNVector3(0.40, 0.90, 1.70)
-        bay.addChildNode(airbox)
 
         // battery + terminals
         let battery = box(0.24, 0.20, 0.18, 0.02, [blackPlastic])
@@ -174,34 +139,6 @@ final class CarAssembly {
         hose1.position = SCNVector3(0.13, 1.08, 1.62)
         hose1.eulerAngles.x = 1.1
         bay.addChildNode(hose1)
-
-        // exhaust manifold: 4 pipes down the left side
-        for i in 0..<4 {
-            let z: Float = 1.06 + Float(i) * 0.16
-            let pipe = SCNNode(geometry: SCNCylinder(radius: 0.024, height: 0.20))
-            (pipe.geometry as? SCNCylinder)?.materials = [Mat.flat(0.45, 0.30, 0.20, rough: 0.6, metal: 0.6)]
-            pipe.position = SCNVector3(-0.29, 0.92, z)
-            pipe.eulerAngles.z = -0.45
-            bay.addChildNode(pipe)
-        }
-
-        // belt drive: crank pulley, alternator, belt loop
-        let crank = SCNNode(geometry: SCNCylinder(radius: 0.065, height: 0.05))
-        (crank.geometry as? SCNCylinder)?.materials = [Mat.steelDark]
-        crank.position = SCNVector3(0.06, 0.80, 1.71)
-        crank.eulerAngles.x = .pi / 2
-        bay.addChildNode(crank)
-        let alternator = SCNNode(geometry: SCNCylinder(radius: 0.075, height: 0.11))
-        (alternator.geometry as? SCNCylinder)?.materials = [aluminum]
-        alternator.position = SCNVector3(-0.24, 0.98, 1.66)
-        alternator.eulerAngles.x = .pi / 2
-        bay.addChildNode(alternator)
-        let belt = SCNNode(geometry: SCNTorus(ringRadius: 0.17, pipeRadius: 0.014))
-        (belt.geometry as? SCNTorus)?.materials = [rubber]
-        belt.position = SCNVector3(-0.09, 0.89, 1.70)
-        belt.eulerAngles.x = .pi / 2
-        belt.scale = SCNVector3(0.75, 1.0, 1.15)
-        bay.addChildNode(belt)
 
         // brake booster on the firewall
         let booster = SCNNode(geometry: SCNCylinder(radius: 0.085, height: 0.07))
@@ -240,16 +177,6 @@ final class CarAssembly {
         let fuse = box(0.22, 0.08, 0.16, 0.02, [blackPlastic])
         fuse.position = SCNVector3(-0.62, 1.00, 1.45)
         bay.addChildNode(fuse)
-
-        // intake runners: four curved tubes from plenum to the head
-        for i in 0..<4 {
-            let z: Float = 1.02 + Float(i) * 0.185
-            let runner = SCNNode(geometry: SCNCylinder(radius: 0.040, height: 0.16))
-            (runner.geometry as? SCNCylinder)?.materials = [aluminum]
-            runner.position = SCNVector3(0.13, 1.115, z)
-            runner.eulerAngles.z = 1.05
-            bay.addChildNode(runner)
-        }
 
         // radiator fan + shroud behind the radiator
         let shroud = box(0.92, 0.28, 0.03, 0.01, [blackPlastic])
@@ -489,7 +416,7 @@ final class CarAssembly {
             g?.materials = fixed ? [clearGlass()] : [crackedGlass()]
         } else if id == "engine" || id == "exhaust" {
             if !fixed { node.geometry?.materials = [Mat.rust] }
-            else { node.geometry?.materials = [id == "engine" ? Mat.steelDark : Mat.steel] }
+            else { node.geometry?.materials = [id == "engine" ? EngineMeshAsset.material() : Mat.steel] }
         } else if id.hasPrefix("wheel") {
             // broken = flat: squash y anchored at the contact patch (the
             // squash alone would lift the tire off the ground); fixed = normal
