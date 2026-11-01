@@ -10,8 +10,8 @@ enum HandPoseV2 {
     static let entries: [E] = [
         E(name: "grip", src: 0, min: [-0.07109369, 0.02046371, -0.00130941], span: [0.08011505, 0.09103634, 0.06301886], off: 0),
         E(name: "squeeze", src: 0, min: [-0.07109055, 0.02046371, -0.00131563], span: [0.08011191, 0.09129266, 0.06301839], off: 48720),
-        E(name: "roundGrip", src: 1, min: [-0.06936489, 0.02046512, -0.00608930], span: [0.07838510, 0.09188295, 0.06785148], off: 0),
-        E(name: "roundSqueeze", src: 1, min: [-0.06936167, 0.02046371, -0.00601417], span: [0.07838308, 0.09119861, 0.06777804], off: 48720),
+        E(name: "roundGrip", src: 1, min: [-0.06936489, 0.02046512, -0.00608930], span: [0.07839127, 0.09188295, 0.06785148], off: 0),
+        E(name: "roundSqueeze", src: 1, min: [-0.06936047, 0.02046510, -0.00601314], span: [0.07838686, 0.09119582, 0.06777597], off: 48720),
     ]
     static func has(_ name: String) -> Bool { entries.contains { $0.name == name } }
     private static let b64A: String = [
