@@ -54,7 +54,7 @@ jobs:
           BUILD_TAG="$(/usr/libexec/PlistBuddy -c 'Print :CarFlopperReleaseLabel' CarFlopper-Info.plist 2>/dev/null || true)"
           if [ -n "$BUILD_TAG" ]; then
             SHORT="$(echo "$BUILD_TAG" | cut -d. -f1-3)"
-            VINT="$(echo "$BUILD_TAG" | awk -F. '{printf "%02d%02d",$3,$4}')"
+            VINT="$(echo "$BUILD_TAG" | awk -F. '{printf "%s%02d%02d%02d",$1,$2,$3,$4}')"
             /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT" CarFlopper-Info.plist
             /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VINT" CarFlopper-Info.plist
           fi
