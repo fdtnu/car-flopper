@@ -86,7 +86,8 @@ final class HandRig {
         sway.addChildNode(pose)
         pose.addChildNode(wrist)
 
-        let skin = Mat.flat(0.87, 0.63, 0.50, rough: 0.6)
+        // brighter nail tone: the baked per-vertex shading multiplies this (skin 0.935/0.90/0.83 of it, nails 1.0)
+        let skin = Mat.flat(0.93, 0.70, 0.60, rough: 0.6)
         let sleeveMat = Mat.flat(0.16, 0.19, 0.26, rough: 0.95)
 
                 skin.isDoubleSided = true
