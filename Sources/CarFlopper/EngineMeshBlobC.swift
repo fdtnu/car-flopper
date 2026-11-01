@@ -1,4 +1,4 @@
-// V8 engine mesh blob (part C of 3): quantized uint16 positions + uint16 UVs + uint16 indices.
+// V8 engine mesh blob (part C of 3): quantized uint16 positions + uint16 UVs (glTF top-left origin, unflipped) + uint16 indices.
 // Generated offline; see EngineMeshAsset.swift header and ASSETS.md.
 
 enum EngineMeshBlobC {
