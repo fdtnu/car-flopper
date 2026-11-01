@@ -110,7 +110,7 @@ final class CarAssembly {
         // below stay authored. Local space: oil pan bottom y = 0, belt drive
         // at +z, so the node sits on the bay floor.
         let engine = EngineMeshAsset.node()
-        engine.position = SCNVector3(0, 0.76, 1.315)
+        engine.position = SCNVector3(0, 0.70, 1.315)  // placement eval: sunk 6cm (top was conspicuous above fender line); oil pan hides in bay floor
         engine.name = "part_engine"
         bay.addChildNode(engine)
         partNodes["engine"] = engine
