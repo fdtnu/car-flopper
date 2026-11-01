@@ -743,7 +743,10 @@ final class HandRig {
             let tSm = tFlare * tFlare * (3 - 2 * tFlare)
             for j in 0..<sides {
                 let a = Float(j) / Float(sides) * Float.pi * 2
-                let pf = HandRig.sleeveProfile(a) * (1 - tSm) + tSm
+                // Close the open end: pinch the last 3 mm of the tube to half radius so the rim and its dark inner face stay inside the skin.
+                let tEnd = max(0, min(1, (smp.s - cuffS + 0.0032) / 0.0028))
+                let eSm = tEnd * tEnd * (3 - 2 * tEnd)
+                let pf = (HandRig.sleeveProfile(a) * (1 - tSm) + tSm) * (0.5 + 0.5 * eSm)
                 let off = bx * (cosf(a) * 0.030 * k * pf) + by * (sinf(a) * 0.024 * k * pf)
                 let p = smp.pos + off
                 vertices.append(SCNVector3(p.x, p.y, p.z))
