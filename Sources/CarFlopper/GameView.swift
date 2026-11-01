@@ -51,6 +51,7 @@ struct GameView: View {
             // still DAMAGED; detour to frame it from the driver side for ~5s so
             // burst frames (which lag the drive by ~20s) record the damaged state
             var doorFramed = false
+            var hoseFramed = false
             func startRound(_ i: Int) {
                 guard i < plan.count else { return }
                 let r = plan[i]
@@ -77,6 +78,18 @@ struct GameView: View {
                     } else {
                         NSLog("[CFREPAIR] damaged-door framing skipped: no door part")
                     }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { startRound(i) }
+                    return
+                }
+                if i == 1, doorFramed, !hoseFramed {
+                    // capture-only: park in front of the nose, oblique, looking
+                    // back/down into the bay so burst frames record the
+                    // radiator-side hose runs against the engine front
+                    hoseFramed = true
+                    let hpx: Float = 0.55, hpz: Float = 3.00
+                    vm.sceneCtrl.localPosition = SCNVector3(hpx, 0, hpz)
+                    faceTarget(0, 1.55, from: hpx, hpz, pitch: -0.23)
+                    NSLog("[CFREPAIR] hose-side framing parked")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { startRound(i) }
                     return
                 }
