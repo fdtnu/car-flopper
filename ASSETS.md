@@ -20,3 +20,16 @@
 - Direct file: https://grab3d.com/dl/v8-engine/v8-engine.glb (downloaded 2026-11-01, 1,522,996 bytes)
 - License: CC0 1.0 Universal (public domain) as stated on the model page; no attribution required, credited here anyway.
 - Modifications: rotated so the crankshaft runs along z with the belt drive at +z (car front); 2048px base-color texture downscaled to 1024px JPEG; normal/metallic-roughness maps dropped (in-code PBR scalars instead); quantized uint16 packing with smooth normals rebuilt at load.
+
+## Sources/CarFlopper/HoodLinerAsset.swift — hood underside liner mesh
+- Derived from the CC0 "Muscle Car" hood faces listed above (grab3d.com).
+- License: CC0 1.0 Universal (public domain).
+- Modifications: offset 15mm toward the underside along the hood vertex normals; inset 5% in x/z about the hood center so a painted perimeter stays visible; quantized uint16 packing with normals rebuilt at load.
+
+## Sources/CarFlopper/GarageTexBlob.swift — garage floor and wall photo textures
+- Floor: "Concrete034" by ambientCG — https://ambientcg.com/view?id=Concrete034
+- Direct file: https://ambientcg.com/get?file=Concrete034_1K-JPG.zip (downloaded 2026-11-01, 3,657,575 bytes)
+- Walls: "Bricks076C" by ambientCG — https://ambientcg.com/view?id=Bricks076C
+- Direct file: https://ambientcg.com/get?file=Bricks076C_1K-JPG.zip (downloaded 2026-11-01)
+- License: CC0 1.0 Universal (public domain) as stated on ambientCG; no attribution required, credited here anyway.
+- Modifications: color maps re-encoded as 1024px JPEG; floor darkened 15%; wall map desaturated and tinted to the two in-game wall tones (light north/west, dark south/east); normal/roughness/AO maps dropped (in-code PBR scalars instead).
