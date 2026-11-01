@@ -84,6 +84,8 @@ final class CarAssembly {
         hood.position = SCNVector3(CarMeshAsset.hoodPivot.x, CarMeshAsset.hoodPivot.y, CarMeshAsset.hoodPivot.z)
         hood.eulerAngles.x = -1.15
         root.addChildNode(hood)
+        // underside liner follows the panel curvature (offset copy, no clip)
+        hood.addChildNode(HoodLinerAsset.node())
 
         // MARK: engine bay (authored) - a recognizable motor sitting inside
         // the mesh bay opening. The whole group is lowered 0.22 so the block
@@ -139,14 +141,23 @@ final class CarAssembly {
         // 1.2cm connector overlap at local (0.13,0.449,0.358); the steel
         // collar sells the inlet neck. (Old routing dived 0.235 into the
         // block and clipped the pulley plane.)
-        let hose1 = SCNNode(geometry: SCNCylinder(radius: 0.035, height: 0.141))
+        // Upper hose: block front-top inlet (0.13,1.154,1.662) -> radiator
+        // top tank, entering 2cm below the tank top at (0.13,1.03,1.80).
+        // Steel collar at the block end; radNeck ring where it dives into
+        // the radiator top. (Previous slope passed over the radiator and
+        // left a blunt end floating above the tank.)
+        let hose1 = SCNNode(geometry: SCNCylinder(radius: 0.035, height: 0.186))
         (hose1.geometry as? SCNCylinder)?.materials = [rubber]
-        hose1.position = SCNVector3(0.13, 1.126, 1.727)
-        hose1.eulerAngles.x = 1.97
-        let inletNeck = SCNNode(geometry: SCNCylinder(radius: 0.042, height: 0.05))
+        hose1.position = SCNVector3(0.13, 1.092, 1.731)
+        hose1.eulerAngles.x = 2.30
+        let inletNeck = SCNNode(geometry: SCNCylinder(radius: 0.042, height: 0.06))
         (inletNeck.geometry as? SCNCylinder)?.materials = [Mat.steel]
         inletNeck.position = SCNVector3(0.13, 1.149, 1.673)
-        inletNeck.eulerAngles.x = 1.97
+        inletNeck.eulerAngles.x = 2.30
+        let radNeck = SCNNode(geometry: SCNCylinder(radius: 0.038, height: 0.03))
+        (radNeck.geometry as? SCNCylinder)?.materials = [Mat.steel]
+        radNeck.position = SCNVector3(0.13, 1.052, 1.80)
+        bay.addChildNode(radNeck)
         bay.addChildNode(inletNeck)
         bay.addChildNode(hose1)
 
