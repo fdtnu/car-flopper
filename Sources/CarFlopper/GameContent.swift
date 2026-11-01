@@ -60,7 +60,7 @@ enum GameContent {
             PartDef(id: "wheelFR", label: "Front right wheel", x: 0.74, y: 0.33, z: 1.52, seconds: 7, tool: "wrench"),
             PartDef(id: "wheelRL", label: "Rear left wheel", x: -0.76, y: 0.36, z: -1.34, seconds: 7, tool: "wrench"),
             PartDef(id: "wheelRR", label: "Rear right wheel", x: 0.76, y: 0.36, z: -1.34, seconds: 7, tool: "wrench"),
-            PartDef(id: "engine", label: "Engine", x: 0.0, y: 0.62, z: 1.40, seconds: 12, tool: "diagnostics"),
+            PartDef(id: "engine", label: "Engine", x: 0.0, y: 0.80, z: 1.32, seconds: 12, tool: "diagnostics"),
             PartDef(id: "door", label: "Driver door", x: -0.98, y: 0.65, z: -0.05, seconds: 9, tool: "screwdriver"),
             PartDef(id: "windshield", label: "Windshield", x: 0.0, y: 1.04, z: 0.30, seconds: 9, tool: "screwdriver"),
             PartDef(id: "exhaust", label: "Exhaust", x: 0.35, y: 0.28, z: -2.40, seconds: 8, tool: "welder"),
