@@ -151,7 +151,7 @@ jobs:
           xcrun simctl io cf-shot recordVideo shots/repair-motion.mp4 &
           VIDPID=$!
           N=21
-          if [ "${{ inputs.hand_angles }}" = "true" ]; then N=31; fi
+          if [ "${{ inputs.hand_angles }}" = "true" ]; then N=43; fi
           for i in $(seq 1 $N); do
             sleep 5
             xcrun simctl io cf-shot screenshot "shots/repair-$(printf %02d $i).png" || true
