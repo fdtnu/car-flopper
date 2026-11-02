@@ -17,12 +17,13 @@ import SceneKit
 // colors) so the measured cuff seal geometry is preserved; boundary edge
 // midpoints use the 1/2 rule.
 //
-// Contact pinning (run 168): `pin` flags verts that sit on the tool contact
-// band of the grip poses (chain-fit flush to the handle radius). Those even
-// verts keep their EXACT input positions and colors, and odd verts between
-// two pinned verts use the 1/2 midpoint, so the rendered skin stays coplanar
-// with the handle surface instead of Loop-pulling into z-fighting range
-// (run 167 pinky-tip speckle). Dorsal skin still Loop-smooths normally.
+// Pinning (run 171 experiment): `pin` flags the fingernail shell plus its
+// one-ring skin neighborhood. Those even verts keep their EXACT input
+// positions and colors, and odd verts between two pinned verts use the 1/2
+// midpoint, so the nail region renders with the pre-subdivision geometry
+// (run 167/170 nail mottle appeared only with subdivision; this isolates
+// whether the mechanism lives in nail-area geometry). All other skin still
+// Loop-smooths normally.
 enum HandSubdivide {
 
     static func subdivide(_ g: SCNGeometry, pin: [Bool]? = nil) -> SCNGeometry {
