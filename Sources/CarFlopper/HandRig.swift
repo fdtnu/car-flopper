@@ -761,32 +761,20 @@ final class HandRig {
         // Keep the visible forearm tangent aligned with the hand. The old
         // two-bone solver bent immediately at the cuff: even a wrist-tracked
         // shoulder could still produce a large screen-space wrist kink.
-        // Bend only after a straight 16 cm forearm run, then escape offscreen.
+        // Keep up to 16 cm straight, but a low wheel pose can aim that
+        // segment through the floor. Turn sooner when world clearance runs out.
         let fd = wz
-        let el = c0 + fd * 0.16
+        let cw = root.convertPosition(c, to: nil)
+        let fw = root.convertVector(SCNVector3(fd.x, fd.y, fd.z), to: nil)
+        let straightRun: Float = fw.y < -0.001 ? max(0.035, min(0.16, (cw.y - 0.065) / -fw.y)) : 0.16
+        let el = c0 + fd * straightRun
 
-        // Escape ray continuing past the lower-right frame edge.
-        // Runs 105/107: the old path turned about 120 deg at the elbow toward
-        // the shoulder near the camera plane. The tube folded there and showed
-        // its dark inside as a ragged band across the forearm. The elbow is
-        // already off-screen, so continue straight along the forearm axis.
-        // Run 109: the straight continuation heads toward the camera (fd.z>0 at
-        // the wheel pose), so the tube crosses the 0.05 near plane near the frame
-        // edge. The clipped wall shows the dark inside as a hard black block.
-        // Clamp the escape direction so the sleeve leaves down/right, away from
-        // the camera.
-        // Beyond the straight forearm, route toward the lower-right edge.
-        // Continuing an away-pointing work axis indefinitely leaves the far
-        // tube end visible as a detached stump within the camera frustum.
-        let fdc = simd_normalize(SIMD3<Float>(max(0.35, fd.x), min(-0.85, fd.y), min(fd.z, 0.0)))
-        let shPath = el + fdc * 0.26
-        let esc = fdc
-        var end = shPath + esc * 0.12
-        var ext: Float = 0.12
-        while escapeOnScreen(end) && ext < 0.7 {
-            ext += 0.05
-            end = shPath + esc * ext
-        }
+        // Route the proximal sleeve back toward the mechanic, not down into
+        // the floor. At low wheel poses the previous down/away continuation
+        // crossed world y=0 in the logged wheel pose (floor-occlusion test).
+        // Both waypoints stay in front of the near plane and exit right.
+        let shPath = SIMD3<Float>(max(0.65, el.x + 0.25), -0.22, -0.18)
+        let end = SIMD3<Float>(max(1.15, shPath.x + 0.35), -0.30, -0.16)
 
         // Centripetal Catmull-Rom control points; a uniform CR overshoots on
         // this uneven spacing. The two throat points inside the hand keep the
@@ -814,7 +802,7 @@ final class HandRig {
         // bend stood off the wrist as a flap. Keep the tube on the wrist axis
         // longer and turn over a longer arc; slim the cuff toward the skin.
         let hug = c0 + wz * 0.022
-        let blend = c0 + wz * 0.028 + fd * 0.045
+        let blend = c0 + wz * min(0.073, straightRun * 0.65)
         let fa = blend + (el - blend) * 0.5
         let ua = el + (shPath - el) * 0.35
         let mid2 = shPath + (end - shPath) * 0.5
