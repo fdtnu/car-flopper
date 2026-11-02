@@ -7,10 +7,14 @@
 - Modifications: hood faces split into a separate hinged node; wheels split per corner and centered on their hubs; pastel materials replaced by in-code PBR materials; quantized int16 packing with normals rebuilt at load.
 
 ## Sources/CarFlopper/HandMeshAsset.swift — embedded first-person hand mesh
-- Source: "Playerhands" by wmiler — https://opengameart.org/content/playerhands
-- Direct file: https://opengameart.org/sites/default/files/hand.zip (downloaded 2026-10-30; MD5 mesh/animation + Blender source)
-- License: CC0 1.0 Universal (public domain) as stated on the model page; no attribution required, credited here anyway.
-- Modifications: forearm trimmed at the wrist; two baked poses (relaxed, grip) produced from the original skeleton via linear-blend skinning about each finger's knuckle axis; 1x Loop subdivision; quantized int16 packing with normals rebuilt at load.
+- Source: "Posable anatomical right hand" from the Innerscene 3D Parts Library — https://www.innerscene.com/tools/library/3d-parts/posable-anatomical-right-hand-f6098b4f (derived from the MakeHuman/MPFB CC0 body/rig assets)
+- License: CC0 1.0 Universal (public domain); no attribution required, credited here anyway.
+- Modifications: five baked poses (relax, grip, squeeze, roundGrip, roundSqueeze) produced from the asset's 16-bone rig via linear-blend skinning about each finger's knuckle axis, plus a per-finger fan spread rebake; rolled-sleeve forearm cuff appended over the wrist shell; quantized uint16 packing with normals rebuilt at load. (Earlier "Playerhands"-based mesh and the Loop subdivision experiment were fully reverted; this entry previously misattributed the source.)
+
+## Sources/CarFlopper/HandTexBlob.swift — hand skin texture + UV map
+- Donor texture: "fps arms (rigged only)" by para — https://opengameart.org/content/fps-arms-rigged-only (downloaded 2026-11-02; author made mesh+texture with MakeHuman's bundled assets and re-baked to new UVs; MakeHuman bundled textures are CC0 1.0 per https://github.com/makehumancommunity/makehuman/blob/master/LICENSE.md)
+- License: CC0 1.0 Universal (public domain), as stated on the model page; no attribution required, credited here anyway.
+- Modifications: skin color transferred onto the existing 8120-vertex hand mesh offline (per-finger Procrustes rig alignment + nearest-surface sampling), rasterized into the mesh's own UV island renormalized to 1024px PNG; UVs emitted V-flipped for SceneKit. No geometry change.
 
 ## Downloaded for future unlock content (not yet shipped)
 - "Sedan" by grab3d.com — https://grab3d.com/models/vehicles/sedan/ — CC0 1.0.
@@ -34,4 +38,3 @@
 - License: CC0 1.0 Universal (public domain) as stated by ambientCG (floor) and Poly Haven (walls); no attribution required, credited here anyway.
 - Replaced 2026-11-02: ambientCG Bricks076C read as rough castle masonry in-game; swapped for concrete block wall brightened/desaturated into painted cinderblock.
 - Modifications: color maps re-encoded as 1024px JPEG; floor darkened 45%; wall map desaturated and brightened to the two in-game painted-wall tones (light north/west, dark south/east); normal/roughness/AO maps dropped (in-code PBR scalars instead).
-
