@@ -66,6 +66,7 @@ final class HandRig {
     //ADLOG private var logT: Float = 0
     //ADLOG private var extLogT: Double = 0
     //ADLOG private var stressT: Double = 0
+    //ADLOG private var palmT: Double = 0
 
     // camera-space rest pose: lower right, forearm entering off-screen
     private let restPos = SCNVector3(0.150, -0.075, -0.360)
@@ -557,6 +558,22 @@ final class HandRig {
         if mode != .working {
             wrist.eulerAngles = SCNVector3(wrist.eulerAngles.x * (1 - f), wrist.eulerAngles.y * (1 - f), wrist.eulerAngles.z * (1 - f))
         }
+        //ADLOG // Palm check (sim-only, -CFPalmCheck): late in the autodrive run,
+        //ADLOG // roll the idle wrist 180 deg about the hand long axis and
+        //ADLOG // hide the tools so periodic captures include a genuinely palm-facing
+        //ADLOG // frame. Verifies palm-side texture placement in the real renderer.
+        //ADLOG // Deterministic; stripped from production by the ADLOG gate.
+        //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFPalmCheck"), mode == .idle {
+        //ADLOG     palmT += Double(dt)
+        //ADLOG     if palmT > 80 {
+        //ADLOG         for (_, n) in toolNodes { n.isHidden = true }
+        //ADLOG         handRelax?.isHidden = false
+        //ADLOG         handGrip?.isHidden = true
+        //ADLOG         // hand nodes sit in wrist space with fingers -z / palm -y,
+        //ADLOG         // so a pi roll about wrist z turns the palm to face the camera
+        //ADLOG         wrist.rotation = SCNVector4(0, 0, 1, Float.pi)
+        //ADLOG     }
+        //ADLOG }
         // Solve the current transformed physical tip after pose/tool smoothing.
         // This deliberately does not project distant targets onto a camera-space
         // reach sphere. Engine pixels must validate visual reach and contact.
