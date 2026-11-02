@@ -588,7 +588,7 @@ final class HandRig {
         //ADLOG     angleT += Double(dt)
         //ADLOG     let angleStage = angleT > 135 ? 4 : angleT > 128 ? 3 : angleT > 121 ? 2 : angleT > 114 ? 1 : 0
         //ADLOG     if angleStage != lastAngleStage {
-        //ADLOG         print("CFANGLES stage=\(angleStage) angleT=\(angleT)")
+        //ADLOG         NSLog("CFANGLES stage=%ld angleT=%.2f", angleStage, angleT)
         //ADLOG         lastAngleStage = angleStage
         //ADLOG     }
         //ADLOG     if angleStage > 0 {
@@ -599,17 +599,36 @@ final class HandRig {
         //ADLOG         // conditions in rendered pixels. Stages 1-3 keep relax.
         //ADLOG         handRelax?.isHidden = angleStage >= 4
         //ADLOG         handGrip?.isHidden = angleStage < 4
-        //ADLOG         // wrist space: fingers -z, palm -y, dorsal +y; the camera
-        //ADLOG         // sits roughly along wrist +y (a pi z-roll turns the palm to
-        //ADLOG         // camera). Stage 1 rolls pi about z (palm to camera); stage 2
-        //ADLOG         // rolls pi/2 (thumb side up); stage 3 pitches the UNROLLED
-        //ADLOG         // hand +pi/2 about x so the fingertips (-z) swing onto +y
-        //ADLOG         // and the nails face the camera. Run 180 showed the composed
-        //ADLOG         // roll-then-pitch variant stayed palm-up; this is the fix.
-        //ADLOG         let angleQ = angleStage >= 3
-        //ADLOG             ? simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(1, 0, 0))
-        //ADLOG             : simd_quatf(angle: angleStage == 1 ? Float.pi : Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
-        //ADLOG         wrist.simdOrientation = angleQ
+        //ADLOG         // Framing fix (run 183 review): angle-only trials left the
+        //ADLOG         // target surfaces at grazing angles, small, and half-occluded
+        //ADLOG         // by the forearm. The rig is parented to the camera node, so
+        //ADLOG         // frame the surface directly: hold the wrist at a fixed spot
+        //ADLOG         // in front of the camera and aim palm (stage 1) or dorsal/nail
+        //ADLOG         // side (stages 3-4) straight at it, fingers up. Stage 2 keeps
+        //ADLOG         // the simple z-roll (thumb side, least critical).
+        //ADLOG         if angleStage == 2 {
+        //ADLOG             wrist.simdOrientation = simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
+        //ADLOG         } else {
+        //ADLOG             var anc: SCNNode? = wrist
+        //ADLOG             while anc != nil && anc?.camera == nil { anc = anc?.parent }
+        //ADLOG             if let cam = anc {
+        //ADLOG                 let camPos = cam.simdWorldPosition
+        //ADLOG                 let camFwd4 = cam.simdWorldTransform.columns.2
+        //ADLOG                 let camFwd = -SIMD3<Float>(camFwd4.x, camFwd4.y, camFwd4.z)
+        //ADLOG                 let spot = camPos + camFwd * 0.45 + SIMD3<Float>(0, -0.05, 0)
+        //ADLOG                 wrist.simdWorldPosition = spot
+        //ADLOG                 let D = simd_normalize(camPos - spot)
+        //ADLOG                 let up = SIMD3<Float>(0, 1, 0)
+        //ADLOG                 let U = simd_normalize(up - D * simd_dot(D, up))
+        //ADLOG                 // wrist space: fingers -z, palm -y, dorsal +y.
+        //ADLOG                 // Map wrist +y to the camera direction for nails
+        //ADLOG                 // (to -D for palm), and wrist +z to -U (fingers up).
+        //ADLOG                 let worldY = angleStage == 1 ? -D : D
+        //ADLOG                 let worldZ = -U
+        //ADLOG                 let worldX = simd_cross(worldY, worldZ)
+        //ADLOG                 wrist.simdWorldOrientation = simd_quatf(simd_float3x3(worldX, worldY, worldZ))
+        //ADLOG             }
+        //ADLOG         }
         //ADLOG     }
         //ADLOG }
         // Solve the current transformed physical tip after pose/tool smoothing.
