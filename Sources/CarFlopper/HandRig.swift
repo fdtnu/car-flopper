@@ -590,12 +590,15 @@ final class HandRig {
         //ADLOG         for (_, n) in toolNodes { n.isHidden = true }
         //ADLOG         handRelax?.isHidden = false
         //ADLOG         handGrip?.isHidden = true
-        //ADLOG         // wrist space: fingers -z, palm -y. Stage 1 rolls pi about
-        //ADLOG         // z (palm to camera); stage 2 rolls pi/2 (thumb side up);
-        //ADLOG         // stage 3 pitches the palm-up hand forward about x so the
-        //ADLOG         // nails and fingertips face the camera.
+        //ADLOG         // wrist space: fingers -z, palm -y, dorsal +y; the camera
+        //ADLOG         // sits roughly along wrist +y (a pi z-roll turns the palm to
+        //ADLOG         // camera). Stage 1 rolls pi about z (palm to camera); stage 2
+        //ADLOG         // rolls pi/2 (thumb side up); stage 3 pitches the UNROLLED
+        //ADLOG         // hand +pi/2 about x so the fingertips (-z) swing onto +y
+        //ADLOG         // and the nails face the camera. Run 180 showed the composed
+        //ADLOG         // roll-then-pitch variant stayed palm-up; this is the fix.
         //ADLOG         let angleQ = angleStage == 3
-        //ADLOG             ? simd_quatf(angle: Float.pi, axis: SIMD3<Float>(0, 0, 1)) * simd_quatf(angle: -Float.pi / 2, axis: SIMD3<Float>(1, 0, 0))
+        //ADLOG             ? simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(1, 0, 0))
         //ADLOG             : simd_quatf(angle: angleStage == 1 ? Float.pi : Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
         //ADLOG         wrist.simdOrientation = angleQ
         //ADLOG     }
