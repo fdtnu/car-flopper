@@ -24,7 +24,7 @@ struct GameView: View {
             // the part completes. A 1s heartbeat makes a wedged renderer or
             // main thread visible as missing beats.
             var hb = 0
-            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            vm.scheduleSimulatorTimer(withTimeInterval: 1.0, repeats: true) { _ in
                 hb += 1
                 NSLog("[CFREPAIR] heartbeat %d", hb)
             }
@@ -78,7 +78,7 @@ struct GameView: View {
                     } else {
                         NSLog("[CFREPAIR] damaged-door framing skipped: no door part")
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { startRound(i) }
+                    vm.scheduleSimulatorDelay(deadline: .now() + 5.0) { startRound(i) }
                     return
                 }
                 if i == 1, doorFramed, !hoseFramed {
@@ -90,7 +90,7 @@ struct GameView: View {
                     vm.sceneCtrl.localPosition = SCNVector3(hpx, 0, hpz)
                     faceTarget(0, 1.55, from: hpx, hpz, pitch: -0.23)
                     NSLog("[CFREPAIR] hose-side framing parked")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 11.0) { startRound(i) }
+                    vm.scheduleSimulatorDelay(deadline: .now() + 11.0) { startRound(i) }
                     return
                 }
                 guard let st = GameContent.toolStations.first(where: { $0.tool == r.stationTool }) ?? GameContent.toolStations.first(where: { $0.tool != plan[0].stationTool }) else { NSLog("[CFREPAIR] FAIL no station for \(r.stationTool)"); return }
@@ -105,12 +105,12 @@ struct GameView: View {
                 // Sim-only controlled idle sample: station pickup can select a
                 // neighboring tool. Keep this round's intended tool equipped,
                 // then leave eight seconds for a natural idle hold at the bench.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                vm.scheduleSimulatorDelay(deadline: .now() + 3.0) {
                     vm.heldTool = r.stationTool
                     vm.sceneCtrl.equipHandTool(r.stationTool)
                     NSLog("[CFREPAIR] idle hold tool=%@", r.stationTool)
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 12.0) {
+                vm.scheduleSimulatorDelay(deadline: .now() + 12.0) {
                     // stations sit within pickup reach of each other on the
                     // bench, so accept whichever tool the proximity tick
                     // equipped; the round exercises a non-diagnostics repair
@@ -147,7 +147,7 @@ struct GameView: View {
             }
             var progressSeen = false
             var finishedAll = false
-            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { t in
+            vm.scheduleSimulatorTimer(withTimeInterval: 0.5, repeats: true) { t in
                 if !progressSeen, let id = targetPart, (vm.parts[id]?.progress ?? 0) > 0 {
                     progressSeen = true
                     NSLog("[CFREPAIR] \(roundLabel): progress flowing")
@@ -168,7 +168,7 @@ struct GameView: View {
                     }
                     roundIndex += 1
                     let doneAll = roundIndex >= plan.count
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 6.5) {
+                    vm.scheduleSimulatorDelay(deadline: .now() + 6.5) {
                         vm.sceneCtrl.cameraPitchOverride = nil
                         if !doneAll {
                             startRound(roundIndex)
@@ -180,10 +180,10 @@ struct GameView: View {
                     if doneAll { t.invalidate() }
                 }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) { startRound(0) }
+            vm.scheduleSimulatorDelay(deadline: .now() + 8.0) { startRound(0) }
             // dead-man watchdog: only a FAIL if the rounds never completed;
             // a successful run used to log a spurious FAIL here at t=115s
-            DispatchQueue.main.asyncAfter(deadline: .now() + 165.0) {
+            vm.scheduleSimulatorDelay(deadline: .now() + 165.0) {
                 if !finishedAll { NSLog("[CFREPAIR] TIMEOUT FAIL round=\(round) part=\(targetPart ?? "-")") }
             }
             return
@@ -194,7 +194,7 @@ struct GameView: View {
         // across every capture: real walking, not just a camera pan.
         // phase 0: closed-loop orbit (walking proof). phases 1/2/3: park at
         // front-left, front-right and rear so captures cover the whole car.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6.0) {
+        vm.scheduleSimulatorDelay(deadline: .now() + 6.0) {
             NSLog("[CFAUTODRIVE] orbit start")
             var phase = 0
             var leg = 0
@@ -202,14 +202,14 @@ struct GameView: View {
             var lastP = vm.sceneCtrl.localPosition
             var stuckTicks = 0
             var tick = 0
-            DispatchQueue.main.asyncAfter(deadline: .now() + 30.0) { phase = 1; NSLog("[CFAUTODRIVE] park front-left") }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 50.0) { phase = 2; NSLog("[CFAUTODRIVE] park front-right") }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 70.0) { phase = 3; NSLog("[CFAUTODRIVE] park rear") }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 82.0) { phase = 4; NSLog("[CFAUTODRIVE] swing around right side") }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 130.0) { phase = 5; NSLog("[CFAUTODRIVE] bay close-up") }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 162.0) { phase = 6; NSLog("[CFAUTODRIVE] wheel-face close-up") }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 194.0) { phase = 7; NSLog("[CFAUTODRIVE] side profile") }
-            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            vm.scheduleSimulatorDelay(deadline: .now() + 30.0) { phase = 1; NSLog("[CFAUTODRIVE] park front-left") }
+            vm.scheduleSimulatorDelay(deadline: .now() + 50.0) { phase = 2; NSLog("[CFAUTODRIVE] park front-right") }
+            vm.scheduleSimulatorDelay(deadline: .now() + 70.0) { phase = 3; NSLog("[CFAUTODRIVE] park rear") }
+            vm.scheduleSimulatorDelay(deadline: .now() + 82.0) { phase = 4; NSLog("[CFAUTODRIVE] swing around right side") }
+            vm.scheduleSimulatorDelay(deadline: .now() + 130.0) { phase = 5; NSLog("[CFAUTODRIVE] bay close-up") }
+            vm.scheduleSimulatorDelay(deadline: .now() + 162.0) { phase = 6; NSLog("[CFAUTODRIVE] wheel-face close-up") }
+            vm.scheduleSimulatorDelay(deadline: .now() + 194.0) { phase = 7; NSLog("[CFAUTODRIVE] side profile") }
+            vm.scheduleSimulatorTimer(withTimeInterval: 0.1, repeats: true) { _ in
                 let p = vm.sceneCtrl.localPosition
                 tick += 1
                 if tick % 30 == 0 { NSLog("[CFAUTODRIVE] tick %d pos %.2f %.2f phase %d", tick, p.x, p.z, phase) }
@@ -297,7 +297,7 @@ struct GameView: View {
         #if AUTODRIVE
         guard ProcessInfo.processInfo.arguments.contains("-CFTouchTest") else { return }
         NSLog("[CFTOUCH] probe armed")
-        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+        vm.scheduleSimulatorTimer(withTimeInterval: 0.5, repeats: true) { _ in
             let c = vm.sceneCtrl
             let ap = vm.activePart; let aim = ap.flatMap { c.partAimWorld($0.id) }
             NSLog("[CFTOUCH] state pos=(%.3f,%.3f) yaw=%.3f joy=(%.2f,%.2f) repairing=%d part=%@ tool=%@ range=%d need=%@ aim=(%.3f,%.3f) prog=%.3f",
