@@ -766,6 +766,9 @@ final class HandRig {
         // inside the occluded fist). The fitted radius is now carried through
         // the palm to the cut instead of necking: cloth stays in contact with
         // the wrist through the flexion crease instead of leaving an annulus.
+        // Run 177 proportion pass: visible forearm run (s 0.04-0.45) tapered ~8-9%
+        // slimmer (cuff keys untouched - wrist-cut coverage preserved; far escape
+        // keys untouched). Sleeve read as wide as the small hand on screen.
         let radiusKeys: [(Float, Float)] = [
             // Thin hem (no throat through the palm): the sleeve now ends 3.2 mm
             // inside the wrist cut and tucks to 0.93x there so the end sits on
@@ -775,8 +778,8 @@ final class HandRig {
             // at the hand, away from the light). Spread the same tuck over 10 mm
             // so the end is buried deeper and the flare faces the camera.
             (-0.0100, 0.93), (-0.0070, 0.97), (-0.0040, 1.01), (-0.0015, 1.035), (0, 1.05),
-            (0.0012, 1.05), (0.0028, 1.055), (0.005, 1.06), (0.010, 1.07), (0.020, 1.09), (0.04, 1.12), (0.14, 1.06),
-            (0.27, 1.08), (0.34, 1.05), (0.45, 1.11), (0.55, 1.22), (1.2, 1.39)
+            (0.0012, 1.05), (0.0028, 1.055), (0.005, 1.06), (0.010, 1.07), (0.020, 1.09), (0.04, 1.09), (0.14, 0.97),
+            (0.27, 0.98), (0.34, 0.96), (0.45, 1.02), (0.55, 1.22), (1.2, 1.39)
         ]
         // Cuff station: the sample nearest the measured cuff point (robust to
         // control-point count; do not index by samples-per-segment).
