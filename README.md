@@ -6,9 +6,9 @@ Un garage, un'auto incidentata, fino a 4 meccanici collegati con un codice stanz
 
 ## Scarica l'ultima versione
 
-[![Download IPA](https://img.shields.io/badge/SCARICA-ultima%20IPA-orange?style=for-the-badge)](https://github.com/federicotaranudev/car-flopper/releases/download/v2026.10.29.1/CarFlopper.ipa)
+[![Download IPA](https://img.shields.io/badge/SCARICA-ultima%20IPA-orange?style=for-the-badge)](https://github.com/federicotaar/car-flopper/releases/tag/v2026.11.02.12)
 
-Oppure scegli una versione specifica dalla tab [Releases](https://github.com/federicotaranudev/car-flopper/releases).
+Oppure scegli una versione specifica dalla tab [Releases](https://github.com/federicotaar/car-flopper/releases).
 
 ## Installazione (iPhone, gratis)
 
@@ -35,6 +35,8 @@ Serve un Apple ID gratuito, niente account developer a pagamento.
 
 ## Stato
 
+Il prossimo test della mano corregge la posa di riposo e mantiene il primo tratto dell'avambraccio in linea con il polso. Verifica visiva in corso; non ancora incluso nell'IPA pubblicata.
+
 In sviluppo attivo. La versione nelle Releases e' una **prerelease non verificata**: compila e il server multiplayer e' online e testato, ma l'app non e' ancora stata provata su un iPhone vero. Diventera' una release stabile dopo il test su dispositivo.
 
 Funziona: lobby con codici stanza, 3D con camminata, riparazioni co-op in tempo reale, sblocco auto. Bug e idee: apri una issue.
@@ -52,7 +54,7 @@ Repair wrecked cars **together with your friends**, in 3D, directly on iPhone.
 One garage, one wrecked car, up to 4 mechanics connected by a 4-letter room code: walk around the garage, get close to a broken part, and hold to repair it. Two people on the same part repair faster. Fix everything to unlock the next car.
 
 ### Download
-[![Download IPA](https://img.shields.io/badge/DOWNLOAD-latest%20IPA-orange?style=for-the-badge)](https://github.com/federicotaranudev/car-flopper/releases)
+[![Download IPA](https://img.shields.io/badge/DOWNLOAD-latest%20IPA-orange?style=for-the-badge)](https://github.com/federicotaar/car-flopper/releases)
 
 ### Install (iPhone, free)
 Requires a free Apple ID — no paid developer account.
@@ -82,4 +84,3 @@ Works: room lobbies with codes, 3D walking, real-time co-op repairs, car unlocki
 ---
 
 _Car Flopper is not affiliated with any automaker. Cars are original low-poly models drawn in code._
-
