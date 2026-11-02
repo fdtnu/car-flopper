@@ -19,6 +19,11 @@ on:
         required: false
         type: boolean
         default: false
+      palm_check:
+        description: 'Sim-only: flip the idle wrist palm-up late in the run (texture placement capture)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -94,6 +99,7 @@ jobs:
           if [ "${{ inputs.autodrive_debug }}" = "true" ]; then ARGS="$ARGS -CFAutoDriveDebug"; fi
           if [ "${{ inputs.mode }}" = "repair" ]; then ARGS="$ARGS -CFAutoDriveRepair"; fi
           if [ "${{ inputs.stress_cuff }}" = "true" ]; then ARGS="$ARGS -CFStressCuff"; fi
+          if [ "${{ inputs.palm_check }}" = "true" ]; then ARGS="$ARGS -CFPalmCheck"; fi
           xcrun simctl launch cf-shot federicotaranu.carflopper $ARGS || true
           mkdir -p shots
           sleep 4
