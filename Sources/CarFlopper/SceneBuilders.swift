@@ -479,7 +479,7 @@ enum GarageBuilder {
             }
         }
         let shell = CarAssembly(def: CarDef(name: "Garage Legend", tagline: "",
-                                            bodyRGB: (0.90, 0.90, 0.92), accentRGB: (0.10, 0.25, 0.85),
+                                            bodyRGB: (0.80, 0.81, 0.84), accentRGB: (0.10, 0.25, 0.85),
                                             hasSpoiler: true, parts: GameContent.parts(wheelsMissing: false)))
         for m in shell.markers.values { m.removeFromParentNode() }
         shell.root.position = SCNVector3(liftX, 0.78, 0)
