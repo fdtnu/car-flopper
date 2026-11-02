@@ -91,4 +91,4 @@ Room phase watchers are cancelled on leave and replacement, then recheck current
 
 ### Private validation 205
 
-Simulator repeating timers and delayed actions now belong to their room and are cancelled on leave. Left rooms stop ticking and ignore queued session callbacks. Installed-app tests add timer/delay cancellation and queued-callback checks before normal repairs. Results pending. The204 transport reset remains unresolved; no reconnect or server change is included.
+Simulator repeating timers and delayed actions now belong to their room and are cancelled on leave. Left rooms stop ticking and ignore queued session callbacks. Installed-app tests add timer/delay cancellation and queued-callback checks before normal repairs. Installed-app205 compiled and passed all seven lifecycle checks, including timer/delay cancellation and queued callbacks. One continuous gameplay room completed all four scripted repair rounds with no reset/TIMEOUT log matches. This single clean run does not erase204 transport failure; no reconnect or server change is included.
