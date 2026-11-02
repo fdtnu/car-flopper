@@ -332,6 +332,9 @@ final class HandRig {
             let pad = SCNNode(geometry: SCNBox(width: 0.150, height: 0.105, length: 0.011, chamferRadius: 0.006))
             pad.geometry?.firstMaterial = Mat.flat(0.09, 0.09, 0.10, rough: 0.4)
             pad.position = SCNVector3(0, 0, 0)
+            // Dorsal idle wrist faces the camera. Turn the tablet body/screen,
+            // not its carry handle, so the same finger channel stays retained.
+            pad.eulerAngles.y = .pi
             n.addChildNode(pad)
             let sm = SCNMaterial()
             sm.diffuse.contents = UIColor(red: 0.02, green: 0.03, blue: 0.025, alpha: 1)
@@ -597,7 +600,7 @@ final class HandRig {
         //ADLOG // production by the ADLOG gate.
         //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFHandAngles") {
         //ADLOG     angleT += Double(dt)
-        //ADLOG     let angleStage = angleT > 168 ? 4 : angleT > 150 ? 3 : angleT > 132 ? 2 : angleT > 114 ? 1 : 0
+        //ADLOG     let angleStage = angleT > 213 ? 4 : angleT > 195 ? 3 : angleT > 177 ? 2 : angleT > 159 ? 1 : 0
         //ADLOG     if angleStage != lastAngleStage {
         //ADLOG         NSLog("CFANGLES stage=%ld angleT=%.2f", angleStage, angleT)
         //ADLOG         lastAngleStage = angleStage
@@ -755,9 +758,9 @@ final class HandRig {
         // Keep the visible forearm tangent aligned with the hand. The old
         // two-bone solver bent immediately at the cuff: even a wrist-tracked
         // shoulder could still produce a large screen-space wrist kink.
-        // Bend only after a straight 23 cm forearm run, then escape offscreen.
+        // Bend only after a straight 16 cm forearm run, then escape offscreen.
         let fd = wz
-        let el = c0 + fd * 0.23
+        let el = c0 + fd * 0.16
 
         // Escape ray continuing past the lower-right frame edge.
         // Runs 105/107: the old path turned about 120 deg at the elbow toward
@@ -769,7 +772,10 @@ final class HandRig {
         // edge. The clipped wall shows the dark inside as a hard black block.
         // Clamp the escape direction so the sleeve leaves down/right, away from
         // the camera.
-        let fdc = simd_normalize(SIMD3<Float>(fd.x, fd.y, min(fd.z, 0.10)))
+        // Beyond the straight forearm, route toward the lower-right edge.
+        // Continuing an away-pointing work axis indefinitely leaves the far
+        // tube end visible as a detached stump within the camera frustum.
+        let fdc = simd_normalize(SIMD3<Float>(max(0.35, fd.x), min(-0.85, fd.y), min(fd.z, 0.0)))
         let shPath = el + fdc * 0.26
         let esc = fdc
         var end = shPath + esc * 0.12
