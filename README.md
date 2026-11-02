@@ -87,4 +87,8 @@ _Car Flopper is not affiliated with any automaker. Cars are original low-poly mo
 
 ### Private validation 204
 
-Room phase watchers are cancelled on leave and replacement, then recheck current room identity after every suspension. Simulator validation exercises stale phase/error callbacks, current-room transitions and leave/re-entry in the real app before normal gameplay capture. Compile and runtime results pending; this does not diagnose or fix reset-by-peer transport failures. Hand geometry and the smooth sleeve202 remain unchanged.
+Room phase watchers are cancelled on leave and replacement, then recheck current room identity after every suspension. Simulator validation exercises stale phase/error callbacks, current-room transitions and leave/re-entry in the real app before normal gameplay capture. Installed-app204 compile and all five lifecycle cases passed; normal gameplay204 still reset during screwdriver after diagnostics and wrench completed. This does not diagnose or fix reset-by-peer transport failures. Hand geometry and the smooth sleeve202 remain unchanged.
+
+### Private validation 205
+
+Simulator repeating timers and delayed actions now belong to their room and are cancelled on leave. Left rooms stop ticking and ignore queued session callbacks. Installed-app tests add timer/delay cancellation and queued-callback checks before normal repairs. Results pending. The204 transport reset remains unresolved; no reconnect or server change is included.
