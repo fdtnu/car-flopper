@@ -6,6 +6,28 @@ import QuartzCore
 
 @MainActor
 final class GameViewModel: ObservableObject {
+    private(set) var sessionActive = true
+    //SIMLIFE private var simulatorTimers: [Timer] = []
+    //SIMLIFE private var simulatorDelays: [DispatchWorkItem] = []
+
+    //SIMLIFE @discardableResult
+    //SIMLIFE func scheduleSimulatorTimer(withTimeInterval interval: TimeInterval, repeats: Bool, _ block: @escaping (Timer) -> Void) -> Timer {
+    //SIMLIFE     let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: repeats) { [weak self] timer in
+    //SIMLIFE         guard let self, self.sessionActive else { timer.invalidate(); return }
+    //SIMLIFE         block(timer)
+    //SIMLIFE     }
+    //SIMLIFE     simulatorTimers.append(timer)
+    //SIMLIFE     return timer
+    //SIMLIFE }
+    //SIMLIFE func scheduleSimulatorDelay(deadline: DispatchTime, _ block: @escaping () -> Void) {
+    //SIMLIFE     let item = DispatchWorkItem { [weak self] in
+    //SIMLIFE         guard let self, self.sessionActive else { return }
+    //SIMLIFE         block()
+    //SIMLIFE     }
+    //SIMLIFE     simulatorDelays.append(item)
+    //SIMLIFE     DispatchQueue.main.asyncAfter(deadline: deadline, execute: item)
+    //SIMLIFE }
+
     let session: GameSession
     let sceneCtrl: GameSceneController
     let localId = UUID().uuidString.prefix(8).description
@@ -78,7 +100,7 @@ final class GameViewModel: ObservableObject {
     deinit { if let o = tickObserver { NotificationCenter.default.removeObserver(o) } }
 
     private func tick(dt: Float) {
-        guard phase == "play" else { return }
+        guard sessionActive, phase == "play" else { return }
         // joystick is screen-space; rotate by camera yaw
         let jx = Float(sceneCtrl.joystickVector.dx), jy = Float(sceneCtrl.joystickVector.dy)
         if jx != 0 || jy != 0 {
@@ -225,6 +247,15 @@ final class GameViewModel: ObservableObject {
     func startGame() { session.sendStart() }
 
     func leave() {
+        guard sessionActive else { return }
+        setRepairing(false)
+        sessionActive = false
+        //SIMLIFE simulatorTimers.forEach { $0.invalidate() }
+        //SIMLIFE simulatorTimers.removeAll()
+        //SIMLIFE simulatorDelays.forEach { $0.cancel() }
+        //SIMLIFE simulatorDelays.removeAll()
+        session.delegate = nil
+        if let o = tickObserver { NotificationCenter.default.removeObserver(o); tickObserver = nil }
         session.close()
     }
 }
@@ -232,6 +263,7 @@ final class GameViewModel: ObservableObject {
 extension GameViewModel: GameSessionDelegate {
     nonisolated func session(_ s: GameSession, didReceive snapshot: RoomSnapshot) {
         Task { @MainActor in
+            guard self.sessionActive else { return }
             // Stop a completed/removed target before publishing its new state.
             // This makes the HUD, hand and held-repair state one transition,
             // rather than waiting for a later render-driven game tick.
@@ -261,6 +293,7 @@ extension GameViewModel: GameSessionDelegate {
 
     nonisolated func session(_ s: GameSession, didGetEvent kind: String, payload: [String: String]) {
         Task { @MainActor in
+            guard self.sessionActive else { return }
             if kind == "partFixed" {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             }
@@ -269,6 +302,7 @@ extension GameViewModel: GameSessionDelegate {
 
     nonisolated func sessionDidClose(_ s: GameSession, reason: String) {
         Task { @MainActor in
+            guard self.sessionActive else { return }
             self.connectionError = reason
         }
     }
