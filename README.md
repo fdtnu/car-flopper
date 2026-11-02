@@ -35,7 +35,7 @@ Serve un Apple ID gratuito, niente account developer a pagamento.
 
 ## Stato
 
-Il prossimo test della mano corregge la posa di riposo e mantiene il primo tratto dell'avambraccio in linea con il polso. Verifica visiva in corso: posa di riposo migliorata; schermo diagnostico verificato, controllo dell'orientamento e del contatto della chiave in uso ancora aperto. Non ancora incluso nell'IPA pubblicata.
+Il prossimo test della mano corregge la posa di riposo e mantiene il primo tratto dell'avambraccio in linea con il polso. Verifica visiva in corso: posa di riposo migliorata; schermo diagnostico verificato, contatto della chiave migliorato; test della manica con limite del tratto diritto in base alla distanza dal pavimento; verifica visiva ancora aperta. Non ancora incluso nell'IPA pubblicata.
 
 In sviluppo attivo. La versione nelle Releases e' una **prerelease non verificata**: compila e il server multiplayer e' online e testato, ma l'app non e' ancora stata provata su un iPhone vero. Diventera' una release stabile dopo il test su dispositivo.
 
