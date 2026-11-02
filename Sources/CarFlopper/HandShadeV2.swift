@@ -1,4 +1,5 @@
 import SceneKit
+import simd
 
 // Run 144: per-vertex ambient occlusion rebaked on the CURRENT HandPoseV2 pose
 // geometry (24 cosine-hemisphere rays, 32 mm range, 8120-vert shared topology),
@@ -827,10 +828,47 @@ enum HandShadeV2 {
         }
         // Run 166: same banding softening as the base bake; indices come from
         // the source geometry's triangle element (shared 8120-vert topology).
+        var weldedNormals: [Float]? = nil
         if let el = g.elements.first {
             var idxArr = [UInt16](repeating: 0, count: el.primitiveCount * 3)
             _ = idxArr.withUnsafeMutableBytes { el.data.copyBytes(to: $0) }
             smoothColors(&cols, nv: nv, indices: idxArr)
+            // Run 174: weld split verts by position before smoothing normals.
+            // The base bake (HandMeshAsset.geometry) averages face normals per
+            // vertex index, but ~1754 verts are position duplicates (UV-seam
+            // splits whose authored normals are identical across the split).
+            // Per-index averaging gives each copy a different normal, which
+            // renders as hard facet plates on the broad dorsal. Accumulating
+            // by position key restores the source asset's smooth shading;
+            // shading only, geometry unchanged.
+            if let vsrc = g.sources.first(where: { $0.semantic == .vertex }) {
+                var pos = [Float](repeating: 0, count: nv * 3)
+                _ = pos.withUnsafeMutableBytes { vsrc.data.copyBytes(to: $0) }
+                var acc = [Int64: SIMD3<Float>]()
+                acc.reserveCapacity(nv)
+                var keyOf = [Int64](repeating: 0, count: nv)
+                for i in 0..<nv {
+                    let qx = Int64((pos[i*3+0] * 100000).rounded()) & 0x1FFFFF
+                    let qy = Int64((pos[i*3+1] * 100000).rounded()) & 0x1FFFFF
+                    let qz = Int64((pos[i*3+2] * 100000).rounded()) & 0x1FFFFF
+                    keyOf[i] = qx | (qy << 21) | (qz << 42)
+                }
+                for f in 0..<el.primitiveCount {
+                    let a = Int(idxArr[f*3]), b = Int(idxArr[f*3+1]), c = Int(idxArr[f*3+2])
+                    let ax = pos[a*3], ay = pos[a*3+1], az = pos[a*3+2]
+                    let ux = pos[b*3]-ax, uy = pos[b*3+1]-ay, uz = pos[b*3+2]-az
+                    let vx = pos[c*3]-ax, vy = pos[c*3+1]-ay, vz = pos[c*3+2]-az
+                    let fn = SIMD3<Float>(uy*vz-uz*vy, uz*vx-ux*vz, ux*vy-uy*vx)
+                    for v in [a, b, c] { acc[keyOf[v], default: .zero] += fn }
+                }
+                var wn = [Float](repeating: 0, count: nv * 3)
+                for i in 0..<nv {
+                    let n = acc[keyOf[i]] ?? SIMD3<Float>(0, 1, 0)
+                    let l = max(1e-6, simd_length(n))
+                    wn[i*3+0] = n.x / l; wn[i*3+1] = n.y / l; wn[i*3+2] = n.z / l
+                }
+                weldedNormals = wn
+            }
         }
         let cData = Data(bytes: &cols, count: nv * 16)
         let cSrc = SCNGeometrySource(data: cData, semantic: .color, vectorCount: nv,
@@ -838,8 +876,16 @@ enum HandShadeV2 {
                                      bytesPerComponent: 4, dataOffset: 0, dataStride: 16)
         // Texture mode: attach the renormalized UV island (HandTexBlob,
         // V-flipped for SceneKit's bottom-left texture origin).
-        let kept = g.sources.filter { $0.semantic != .color && $0.semantic != .texcoord }
-        var srcs = kept + [cSrc]
+        var srcs = g.sources.filter { $0.semantic != .color && $0.semantic != .texcoord }
+        if let wn = weldedNormals {
+            srcs = srcs.filter { $0.semantic != .normal }
+            let nData = Data(bytes: wn, count: wn.count * 4)
+            let nSrc = SCNGeometrySource(data: nData, semantic: .normal, vectorCount: nv,
+                                         usesFloatComponents: true, componentsPerVector: 3,
+                                         bytesPerComponent: 4, dataOffset: 0, dataStride: 12)
+            srcs.append(nSrc)
+        }
+        srcs.append(cSrc)
         if HandTexBlob.uvData.count == 8120 * 8 {
             srcs.append(SCNGeometrySource(data: HandTexBlob.uvData, semantic: .texcoord,
                                           vectorCount: nv, usesFloatComponents: true,
