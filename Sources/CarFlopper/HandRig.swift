@@ -103,9 +103,9 @@ final class HandRig {
         // Run 166: route the rest pose through the same smoothed bake so its
         // finger backs lose the triangle banding too (replaces, not stacks,
         // the base color source).
-        handRelax.geometry = HandShadeV2.shaded(handRelax.geometry, pose: "relax")
+        if let g = HandShadeV2.shaded(handRelax.geometry, pose: "relax") { handRelax.geometry = HandSubdivide.subdivide(g) }
         let handGrip = HandMeshAsset.node("grip", material: skin)
-        handGrip.geometry = HandShadeV2.shaded(handGrip.geometry, pose: "grip")
+        if let g = HandShadeV2.shaded(handGrip.geometry, pose: "grip") { handGrip.geometry = HandSubdivide.subdivide(g) }
         for h in [handRelax, handGrip] {
             h.eulerAngles.x = -.pi / 2
             h.scale = SCNVector3(1.0, 1.0, 1.0)
@@ -126,13 +126,13 @@ final class HandRig {
         // against Apple's SceneKit docs (var morpher: SCNMorpher?)
         if let relaxGeo = HandShadeV2.shaded(HandMeshAsset.node("squeeze", material: skin).geometry, pose: "squeeze") {
             let m = SCNMorpher()
-            m.targets = [relaxGeo]
+            m.targets = [HandSubdivide.subdivide(relaxGeo)]
             handGrip.morpher = m
         }
         narrowGripGeometry = handGrip.geometry
-        narrowSqueezeGeometry = HandShadeV2.shaded(HandMeshAsset.node("squeeze", material: skin).geometry, pose: "squeeze")
-        roundGripGeometry = HandShadeV2.shaded(HandMeshAsset.node("roundGrip", material: skin).geometry, pose: "roundGrip")
-        roundSqueezeGeometry = HandShadeV2.shaded(HandMeshAsset.node("roundSqueeze", material: skin).geometry, pose: "roundSqueeze")
+        if let g = HandShadeV2.shaded(HandMeshAsset.node("squeeze", material: skin).geometry, pose: "squeeze") { narrowSqueezeGeometry = HandSubdivide.subdivide(g) }
+        if let g = HandShadeV2.shaded(HandMeshAsset.node("roundGrip", material: skin).geometry, pose: "roundGrip") { roundGripGeometry = HandSubdivide.subdivide(g) }
+        if let g = HandShadeV2.shaded(HandMeshAsset.node("roundSqueeze", material: skin).geometry, pose: "roundSqueeze") { roundSqueezeGeometry = HandSubdivide.subdivide(g) }
         handGrip.isHidden = true
         self.handRelax = handRelax
         self.handGrip = handGrip
