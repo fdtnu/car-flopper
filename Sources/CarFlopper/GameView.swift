@@ -183,7 +183,7 @@ struct GameView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) { startRound(0) }
             // dead-man watchdog: only a FAIL if the rounds never completed;
             // a successful run used to log a spurious FAIL here at t=115s
-            DispatchQueue.main.asyncAfter(deadline: .now() + 115.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 165.0) {
                 if !finishedAll { NSLog("[CFREPAIR] TIMEOUT FAIL round=\(round) part=\(targetPart ?? "-")") }
             }
             return
