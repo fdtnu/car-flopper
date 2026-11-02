@@ -576,6 +576,17 @@ final class HandRig {
         //ADLOG         wrist.rotation = SCNVector4(0, 0, 1, Float.pi)
         //ADLOG     }
         //ADLOG }
+        // Solve the current transformed physical tip after pose/tool smoothing.
+        // This deliberately does not project distant targets onto a camera-space
+        // reach sphere. Engine pixels must validate visual reach and contact.
+        if mode == .working, reachable, workTool != "diagnostics", let w = workTargetWorld,
+           let parent = pose.parent {
+            let goal = parent.convertPosition(w, from: nil)
+            let tip = tipRef.convertPosition(SCNVector3Zero, to: parent)
+            pose.position = SCNVector3(pose.position.x + goal.x - tip.x,
+                                       pose.position.y + goal.y - tip.y,
+                                       pose.position.z + goal.z - tip.z)
+        }
         //ADLOG // Hand-angles capture (sim-only, -CFHandAngles): after the repair
         //ADLOG // plan finishes (~108s after garage appear in the current drive),
         //ADLOG // park the hand and cycle the wrist through palm-up, thumb-side
@@ -609,14 +620,15 @@ final class HandRig {
         //ADLOG         if angleStage == 2 {
         //ADLOG             wrist.simdOrientation = simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
         //ADLOG         } else if angleStage == 4 {
-        //ADLOG             // Curled-nail framing (runs 186-187): aiming the palm
-        //ADLOG             // axis (either sign) leaves the grip model's nail
-        //ADLOG             // patches tucked inside the curl. Offline decode of
-        //ADLOG             // the "grip" mesh (dorsal tip-vertex normals) puts
-        //ADLOG             // the mean nail direction at wrist (0.011, -0.998,
-        //ADLOG             // 0.068); aim it at the camera and roll the finger
-        //ADLOG             // row (wrist +x, index->pinky) horizontal. Rendered
-        //ADLOG             // pixels decide whether the nails read front-on.
+        //ADLOG             // Curled-nail framing (run 188 review): wrist -y is
+        //ADLOG             // the PALMAR side (asset header: mesh palm -z, and the
+        //ADLOG             // -90deg child x-rotation; confirmed by thumb-side
+        //ADLOG             // chirality in run-188 stage pixels). Offline decode of
+        //ADLOG             // the "grip" mesh dorsal tip-vertex normals puts the
+        //ADLOG             // mean curled-nail direction at wrist (0.14, 0.763,
+        //ADLOG             // 0.631); aim it at the camera and roll the finger row
+        //ADLOG             // (wrist +x, index->pinky) horizontal. Rendered pixels
+        //ADLOG             // decide whether the nails read front-on.
         //ADLOG             var anc4: SCNNode? = wrist
         //ADLOG             while anc4 != nil && anc4?.camera == nil { anc4 = anc4?.parent }
         //ADLOG             if let cam4 = anc4 {
@@ -626,7 +638,7 @@ final class HandRig {
         //ADLOG                 let spot4 = camPos4 + camFwd4 * 0.45 + SIMD3<Float>(0, -0.05, 0)
         //ADLOG                 wrist.simdWorldPosition = spot4
         //ADLOG                 let D4 = simd_normalize(camPos4 - spot4)
-        //ADLOG                 let nailDir = simd_normalize(SIMD3<Float>(0.011, -0.998, 0.068))
+        //ADLOG                 let nailDir = simd_normalize(SIMD3<Float>(0.14, 0.763, 0.631))
         //ADLOG                 let q0 = simd_quatf(from: nailDir, to: D4)
         //ADLOG                 let up4 = SIMD3<Float>(0, 1, 0)
         //ADLOG                 let U4 = simd_normalize(up4 - D4 * simd_dot(D4, up4))
@@ -647,10 +659,10 @@ final class HandRig {
         //ADLOG                 let D = simd_normalize(camPos - spot)
         //ADLOG                 let up = SIMD3<Float>(0, 1, 0)
         //ADLOG                 let U = simd_normalize(up - D * simd_dot(D, up))
-        //ADLOG                 // wrist space: fingers -z, palm +y, dorsal -y (run 186
-        //ADLOG                 // rendered pixels: mapping +y to the camera showed the palm).
-        //ADLOG                 // Map palm to the camera for stage 1, dorsal/nails for
-        //ADLOG                 // stages 3-4, and wrist +z to -U (fingers up).
+        //ADLOG                 // wrist space: fingers -z, palm -y, dorsal +y
+        //ADLOG                 // (asset header mesh palm -z + child x-rotation; run-188
+        //ADLOG                 // stage pixels confirmed chirality). Map dorsal to the
+        //ADLOG                 // camera for stage 1, palmar for stage 3, fingers up.
         //ADLOG                 let worldY = angleStage == 1 ? D : -D
         //ADLOG                 let worldZ = -U
         //ADLOG                 let worldX = simd_cross(worldY, worldZ)
@@ -659,17 +671,6 @@ final class HandRig {
         //ADLOG         }
         //ADLOG     }
         //ADLOG }
-        // Solve the current transformed physical tip after pose/tool smoothing.
-        // This deliberately does not project distant targets onto a camera-space
-        // reach sphere. Engine pixels must validate visual reach and contact.
-        if mode == .working, reachable, workTool != "diagnostics", let w = workTargetWorld,
-           let parent = pose.parent {
-            let goal = parent.convertPosition(w, from: nil)
-            let tip = tipRef.convertPosition(SCNVector3Zero, to: parent)
-            pose.position = SCNVector3(pose.position.x + goal.x - tip.x,
-                                       pose.position.y + goal.y - tip.y,
-                                       pose.position.z + goal.z - tip.z)
-        }
         //ADLOG // Stress sweep (sim-only, -CFStressCuff): pitch the wrist through
         //ADLOG // +-35 deg about its local x during welder work so every validation
         //ADLOG // run captures the cuff across the full grazing-angle envelope,
