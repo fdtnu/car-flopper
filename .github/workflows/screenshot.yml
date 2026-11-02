@@ -82,6 +82,7 @@ jobs:
       - name: Enable autodrive hooks for the sim build only
         run: |
           sed -i '' 's/#if AUTODRIVE/#if true/' Sources/CarFlopper/MenuViews.swift Sources/CarFlopper/GameView.swift
+          sed -i '' 's|//SIMLIFE ||' Sources/CarFlopper/GameViewModel.swift
           sed -i '' 's|//FLOWTEST ||' Sources/CarFlopper/CarFlopperApp.swift
           sed -i '' 's|//ADLOG ||' Sources/CarFlopper/HandRig.swift Sources/CarFlopper/GameScene.swift
           grep -c '#if true' Sources/CarFlopper/MenuViews.swift Sources/CarFlopper/GameView.swift
@@ -113,7 +114,7 @@ jobs:
           cat /tmp/cfflowtest.txt | grep CFFLOWTEST || true
           grep -q '\[CFFLOWTEST\] DONE' /tmp/cfflowtest.txt
           ! grep -q '\[CFFLOWTEST\] FAIL' /tmp/cfflowtest.txt
-          test "$(grep -c '\[CFFLOWTEST\] PASS' /tmp/cfflowtest.txt)" -eq 5
+          test "$(grep -c '\[CFFLOWTEST\] PASS' /tmp/cfflowtest.txt)" -eq 7
           xcrun simctl terminate cf-shot federicotaranu.carflopper
           kill "$FLOWLOG" || true
           ARGS="-CFAutoDrive"
@@ -194,6 +195,7 @@ jobs:
         with:
           name: sim-screenshots
           path: |
+            /tmp/cfflowtest.txt
             shots/*.png
             shots/*.mp4
             /tmp/cflog.txt
