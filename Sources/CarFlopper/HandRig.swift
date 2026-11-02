@@ -758,23 +758,16 @@ final class HandRig {
         let u = simd_normalize(SIMD3<Float>(vx.x, vx.y, vx.z))
         let v = simd_normalize(SIMD3<Float>(vy.x, vy.y, vy.z))
 
-        // Keep the visible forearm tangent aligned with the hand. The old
-        // two-bone solver bent immediately at the cuff: even a wrist-tracked
-        // shoulder could still produce a large screen-space wrist kink.
-        // Keep up to 16 cm straight, but a low wheel pose can aim that
-        // segment through the floor. Turn sooner when world clearance runs out.
+        // Keep the cuff tangent aligned with the wrist, then curve smoothly
+        // toward the mechanic. The low wheel pose limits the tangent reach
+        // before the floor, not a hard elbow point in the visible silhouette.
         let fd = wz
         let cw = root.convertPosition(c, to: nil)
         let fw = root.convertVector(SCNVector3(fd.x, fd.y, fd.z), to: nil)
         let straightRun: Float = fw.y < -0.001 ? max(0.035, min(0.16, (cw.y - 0.065) / -fw.y)) : 0.16
         let el = c0 + fd * straightRun
-
-        // Route the proximal sleeve back toward the mechanic, not down into
-        // the floor. At low wheel poses the previous down/away continuation
-        // crossed world y=0 in the logged wheel pose (floor-occlusion test).
-        // Both waypoints stay in front of the near plane and exit right.
-        let shPath = SIMD3<Float>(max(0.65, el.x + 0.25), -0.22, -0.18)
-        let end = SIMD3<Float>(max(1.15, shPath.x + 0.35), -0.30, -0.16)
+        let shPath = SIMD3<Float>(0.70, -0.18, -0.16)
+        let end = SIMD3<Float>(1.25, -0.22, -0.14)
 
         // Centripetal Catmull-Rom control points; a uniform CR overshoots on
         // this uneven spacing. The two throat points inside the hand keep the
@@ -801,12 +794,17 @@ final class HandRig {
         // the forearm only 6 mm past the cut, so the outer side of that sharp
         // bend stood off the wrist as a flap. Keep the tube on the wrist axis
         // longer and turn over a longer arc; slim the cuff toward the skin.
-        let hug = c0 + wz * 0.022
-        let blend = c0 + wz * min(0.073, straightRun * 0.65)
-        let fa = blend + (el - blend) * 0.5
-        let ua = el + (shPath - el) * 0.35
-        let mid2 = shPath + (end - shPath) * 0.5
-        let samples = sampleTubePath([thB, thC, thD, c0, hug, blend, fa, el, ua, shPath, mid2, end])
+        // A single cubic has no forced elbow corner. Its controls remain
+        // above the floor in the low wheel pose, so the full curve does too.
+        // The first control sets the cuff tangent; the last two lead offscreen.
+        let control2 = SIMD3<Float>(0.48, -0.18, -0.20)
+        var path = [thB, thC, thD, c0]
+        let curveTimes: [Float] = [0.025, 0.05, 0.10, 0.18, 0.28, 0.42, 0.60, 0.80, 1.0]
+        for t in curveTimes {
+            let q = 1 - t
+            path.append(c0 * (q*q*q) + el * (3*q*q*t) + control2 * (3*q*t*t) + end * (t*t*t))
+        }
+        let samples = sampleTubePath(path)
 
         // Radius keys in absolute meters along the path, measured from the cuff.
         // Negative s is inside the hand: a slim cone (fits the measured palm
