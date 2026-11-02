@@ -105,7 +105,7 @@ final class HandRig {
         // the base color source).
         if let g = HandShadeV2.shaded(handRelax.geometry, pose: "relax") { handRelax.geometry = HandSubdivide.subdivide(g) }
         let handGrip = HandMeshAsset.node("grip", material: skin)
-        if let g = HandShadeV2.shaded(handGrip.geometry, pose: "grip") { handGrip.geometry = HandSubdivide.subdivide(g) }
+        if let g = HandShadeV2.shaded(handGrip.geometry, pose: "grip") { handGrip.geometry = HandSubdivide.subdivide(g, pin: HandPoseV2.pinMask("grip")) }
         for h in [handRelax, handGrip] {
             h.eulerAngles.x = -.pi / 2
             h.scale = SCNVector3(1.0, 1.0, 1.0)
@@ -130,9 +130,9 @@ final class HandRig {
             handGrip.morpher = m
         }
         narrowGripGeometry = handGrip.geometry
-        if let g = HandShadeV2.shaded(HandMeshAsset.node("squeeze", material: skin).geometry, pose: "squeeze") { narrowSqueezeGeometry = HandSubdivide.subdivide(g) }
-        if let g = HandShadeV2.shaded(HandMeshAsset.node("roundGrip", material: skin).geometry, pose: "roundGrip") { roundGripGeometry = HandSubdivide.subdivide(g) }
-        if let g = HandShadeV2.shaded(HandMeshAsset.node("roundSqueeze", material: skin).geometry, pose: "roundSqueeze") { roundSqueezeGeometry = HandSubdivide.subdivide(g) }
+        if let g = HandShadeV2.shaded(HandMeshAsset.node("squeeze", material: skin).geometry, pose: "squeeze") { narrowSqueezeGeometry = HandSubdivide.subdivide(g, pin: HandPoseV2.pinMask("squeeze")) }
+        if let g = HandShadeV2.shaded(HandMeshAsset.node("roundGrip", material: skin).geometry, pose: "roundGrip") { roundGripGeometry = HandSubdivide.subdivide(g, pin: HandPoseV2.pinMask("roundGrip")) }
+        if let g = HandShadeV2.shaded(HandMeshAsset.node("roundSqueeze", material: skin).geometry, pose: "roundSqueeze") { roundSqueezeGeometry = HandSubdivide.subdivide(g, pin: HandPoseV2.pinMask("roundSqueeze")) }
         handGrip.isHidden = true
         self.handRelax = handRelax
         self.handGrip = handGrip
