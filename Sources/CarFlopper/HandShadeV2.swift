@@ -773,6 +773,38 @@ enum HandShadeV2 {
     ].joined()
     private static let blob: Data = Data(base64Encoded: b64)!
 
+    // Run 166: soften byte-quantized bake banding (visible triangle patches on
+    // finger backs) with one 50% neighbor-average pass over the shared mesh
+    // adjacency. Broad AO features survive; single-triangle steps wash out.
+    private static var adjacencyCache: [[Int]]?
+    static func smoothColors(_ cols: inout [Float], nv: Int, indices: [UInt16]) {
+        if adjacencyCache == nil {
+            var adj = [Set<Int>](repeating: Set(), count: nv)
+            var i = 0
+            while i + 2 < indices.count {
+                let a = Int(indices[i]), b = Int(indices[i + 1]), c = Int(indices[i + 2])
+                adj[a].insert(b); adj[a].insert(c)
+                adj[b].insert(a); adj[b].insert(c)
+                adj[c].insert(a); adj[c].insert(b)
+                i += 3
+            }
+            adjacencyCache = adj.map { Array($0) }
+        }
+        guard let adj = adjacencyCache else { return }
+        var out = cols
+        for v in 0..<nv {
+            let nb = adj[v]
+            if nb.isEmpty { continue }
+            var ar: Float = 0, ag: Float = 0, ab: Float = 0
+            for w in nb { ar += cols[w * 4]; ag += cols[w * 4 + 1]; ab += cols[w * 4 + 2] }
+            let inv = 1.0 / Float(nb.count)
+            out[v * 4 + 0] = cols[v * 4 + 0] * 0.5 + ar * inv * 0.5
+            out[v * 4 + 1] = cols[v * 4 + 1] * 0.5 + ag * inv * 0.5
+            out[v * 4 + 2] = cols[v * 4 + 2] * 0.5 + ab * inv * 0.5
+        }
+        cols = out
+    }
+
     static func shaded(_ g: SCNGeometry?, pose: String) -> SCNGeometry? {
         guard let g = g, let k = order.firstIndex(of: pose), blob.count >= 8120 * 7 else { return g }
         let nv = 8120
@@ -800,11 +832,19 @@ enum HandShadeV2 {
                 cols[i * 4 + 3] = 1
             }
         }
+        // Run 166: same banding softening as the base bake; indices come from
+        // the source geometry's triangle element (shared 8120-vert topology).
+        if let el = g.elements.first {
+            var idxArr = [UInt16](repeating: 0, count: el.primitiveCount * 3)
+            _ = idxArr.withUnsafeMutableBytes { el.data.copyBytes(to: $0) }
+            smoothColors(&cols, nv: nv, indices: idxArr)
+        }
         let cData = Data(bytes: &cols, count: nv * 16)
         let cSrc = SCNGeometrySource(data: cData, semantic: .color, vectorCount: nv,
                                      usesFloatComponents: true, componentsPerVector: 4,
                                      bytesPerComponent: 4, dataOffset: 0, dataStride: 16)
-        let out = SCNGeometry(sources: g.sources + [cSrc], elements: g.elements)
+        let kept = g.sources.filter { $0.semantic != .color }
+        let out = SCNGeometry(sources: kept + [cSrc], elements: g.elements)
         out.materials = g.materials
         return out
     }
