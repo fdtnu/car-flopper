@@ -87,7 +87,10 @@ final class HandRig {
         pose.addChildNode(wrist)
 
         // brighter nail tone: the baked per-vertex shading multiplies this (skin 0.935/0.90/0.83 of it, nails 1.0)
-        let skin = Mat.flat(0.93, 0.70, 0.60, rough: 0.6)
+        // Skin albedo comes from the transferred CC0 texture (HandTexBlob);
+        // white base keeps SceneKit's texture x vertex-color multiply neutral.
+        let skin = Mat.flat(1, 1, 1, rough: 0.6)
+        skin.diffuse.contents = HandTexBlob.image
         let sleeveMat = Mat.flat(0.16, 0.19, 0.26, rough: 0.95)
 
                 skin.isDoubleSided = true
