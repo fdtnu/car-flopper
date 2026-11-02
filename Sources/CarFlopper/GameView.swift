@@ -102,7 +102,15 @@ struct GameView: View {
                 let spz = st.z - st.z / sl * 0.85
                 vm.sceneCtrl.localPosition = SCNVector3(spx, 0, spz)
                 faceTarget(st.x, st.z, from: spx, spz, pitch: -0.30)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                // Sim-only controlled idle sample: station pickup can select a
+                // neighboring tool. Keep this round's intended tool equipped,
+                // then leave eight seconds for a natural idle hold at the bench.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    vm.heldTool = r.stationTool
+                    vm.sceneCtrl.equipHandTool(r.stationTool)
+                    NSLog("[CFREPAIR] idle hold tool=%@", r.stationTool)
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 12.0) {
                     // stations sit within pickup reach of each other on the
                     // bench, so accept whichever tool the proximity tick
                     // equipped; the round exercises a non-diagnostics repair
