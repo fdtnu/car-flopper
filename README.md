@@ -84,3 +84,7 @@ Works: room lobbies with codes, 3D walking, real-time co-op repairs, car unlocki
 ---
 
 _Car Flopper is not affiliated with any automaker. Cars are original low-poly models drawn in code._
+
+### Private validation 204
+
+Room phase watchers are cancelled on leave and replacement, then recheck current room identity after every suspension. Simulator validation exercises stale phase/error callbacks, current-room transitions and leave/re-entry in the real app before normal gameplay capture. Compile and runtime results pending; this does not diagnose or fix reset-by-peer transport failures. Hand geometry and the smooth sleeve202 remain unchanged.
