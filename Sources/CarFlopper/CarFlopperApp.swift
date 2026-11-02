@@ -53,13 +53,23 @@ final class FlowModel: ObservableObject {
     //FLOWTEST     enterLobby(session: oldSession)
     //FLOWTEST     guard let old = vm else { check(false, "old room exists"); return }
     //FLOWTEST     await pause()
+    //FLOWTEST     var oldTicks = 0
+    //FLOWTEST     var oldDelayFired = false
+    //FLOWTEST     let oldTimer = old.scheduleSimulatorTimer(withTimeInterval: 0.05, repeats: true) { _ in oldTicks += 1 }
+    //FLOWTEST     old.scheduleSimulatorDelay(deadline: .now() + 0.20) { oldDelayFired = true }
     //FLOWTEST     leave()
+    //FLOWTEST     let ticksAtLeave = oldTicks
     //FLOWTEST     enterLobby(session: GameSession(code: "TEST", name: "NEW"))
     //FLOWTEST     guard let current = vm else { check(false, "new room exists"); return }
     //FLOWTEST     old.phase = "play"
     //FLOWTEST     old.connectionError = "late old-room reset"
     //FLOWTEST     await pause()
     //FLOWTEST     check(vm === current && screen == .lobby, "stale phase and error cannot close replacement")
+    //FLOWTEST     check(!oldTimer.isValid && oldTicks == ticksAtLeave && !oldDelayFired, "old timers and delayed actions stop on leave")
+    //FLOWTEST     old.session(oldSession, didReceive: RoomSnapshot(code: "TEST", phase: "play", carIndex: 0, hostId: "old", players: [], parts: [:]))
+    //FLOWTEST     old.sessionDidClose(oldSession, reason: "queued late callback")
+    //FLOWTEST     await pause()
+    //FLOWTEST     check(old.connectionError == "late old-room reset" && vm === current, "queued old session callbacks ignored")
     //FLOWTEST     current.phase = "play"
     //FLOWTEST     await pause()
     //FLOWTEST     check(vm === current && screen == .game, "current phase reaches game")
