@@ -608,6 +608,33 @@ final class HandRig {
         //ADLOG         // the simple z-roll (thumb side, least critical).
         //ADLOG         if angleStage == 2 {
         //ADLOG             wrist.simdOrientation = simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
+        //ADLOG         } else if angleStage == 4 {
+        //ADLOG             // Curled-nail framing (runs 186-187): aiming the palm
+        //ADLOG             // axis (either sign) leaves the grip model's nail
+        //ADLOG             // patches tucked inside the curl. Offline decode of
+        //ADLOG             // the "grip" mesh (dorsal tip-vertex normals) puts
+        //ADLOG             // the mean nail direction at wrist (0.011, -0.998,
+        //ADLOG             // 0.068); aim it at the camera and roll the finger
+        //ADLOG             // row (wrist +x, index->pinky) horizontal. Rendered
+        //ADLOG             // pixels decide whether the nails read front-on.
+        //ADLOG             var anc4: SCNNode? = wrist
+        //ADLOG             while anc4 != nil && anc4?.camera == nil { anc4 = anc4?.parent }
+        //ADLOG             if let cam4 = anc4 {
+        //ADLOG                 let camPos4 = cam4.simdWorldPosition
+        //ADLOG                 let cf4 = cam4.simdWorldTransform.columns.2
+        //ADLOG                 let camFwd4 = -SIMD3<Float>(cf4.x, cf4.y, cf4.z)
+        //ADLOG                 let spot4 = camPos4 + camFwd4 * 0.45 + SIMD3<Float>(0, -0.05, 0)
+        //ADLOG                 wrist.simdWorldPosition = spot4
+        //ADLOG                 let D4 = simd_normalize(camPos4 - spot4)
+        //ADLOG                 let nailDir = simd_normalize(SIMD3<Float>(0.011, -0.998, 0.068))
+        //ADLOG                 let q0 = simd_quatf(from: nailDir, to: D4)
+        //ADLOG                 let up4 = SIMD3<Float>(0, 1, 0)
+        //ADLOG                 let U4 = simd_normalize(up4 - D4 * simd_dot(D4, up4))
+        //ADLOG                 let right4 = simd_normalize(simd_cross(U4, D4))
+        //ADLOG                 let px = simd_float3x3(q0) * SIMD3<Float>(1, 0, 0)
+        //ADLOG                 let pxp = simd_normalize(px - D4 * simd_dot(px, D4))
+        //ADLOG                 wrist.simdWorldOrientation = simd_quatf(from: pxp, to: right4) * q0
+        //ADLOG             }
         //ADLOG         } else {
         //ADLOG             var anc: SCNNode? = wrist
         //ADLOG             while anc != nil && anc?.camera == nil { anc = anc?.parent }
