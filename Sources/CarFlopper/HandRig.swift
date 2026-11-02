@@ -217,6 +217,46 @@ final class HandRig {
     private static let toolChrome = Mat.flat(0.72, 0.73, 0.77, rough: 0.45, metal: 0.0)
     private static let toolSteelDark = Mat.flat(0.20, 0.21, 0.24, rough: 0.55, metal: 0.0)
 
+    // Diagnostic pad screen: dark glass with a scope grid, waveform trace and
+    // status bars, so the pad reads as a scan-tool display instead of a flat
+    // neon-green panel. Emission keeps the existing intensity pulse.
+    private static func diagnosticScreenImage() -> UIImage {
+        let size = CGSize(width: 264, height: 176)
+        let r = UIGraphicsImageRenderer(size: size)
+        return r.image { ctx in
+            let c = ctx.cgContext
+            UIColor(red: 0.03, green: 0.05, blue: 0.04, alpha: 1).setFill()
+            c.fill(CGRect(origin: .zero, size: size))
+            UIColor(red: 0.10, green: 0.28, blue: 0.16, alpha: 1).setStroke()
+            c.setLineWidth(1)
+            for gx in stride(from: CGFloat(12), through: size.width - 12, by: 24) {
+                c.move(to: CGPoint(x: gx, y: 28)); c.addLine(to: CGPoint(x: gx, y: size.height - 12))
+            }
+            for gy in stride(from: CGFloat(28), through: size.height - 12, by: 24) {
+                c.move(to: CGPoint(x: 12, y: gy)); c.addLine(to: CGPoint(x: size.width - 12, y: gy))
+            }
+            c.strokePath()
+            UIColor(red: 0.12, green: 0.45, blue: 0.25, alpha: 1).setFill()
+            c.fill(CGRect(x: 0, y: 0, width: size.width, height: 18))
+            UIColor(red: 0.35, green: 0.95, blue: 0.55, alpha: 1).setStroke()
+            c.setLineWidth(2)
+            c.setLineJoin(.round)
+            var first = true
+            for px in stride(from: CGFloat(12), through: size.width - 12, by: 4) {
+                let t = (px - 12) / (size.width - 24)
+                let wave = sinf(Float(t * .pi * 6)) * 18 + sinf(Float(t * .pi * 17)) * 6
+                let spike: Float = (0.30...0.36).contains(t) ? -34 : ((0.72...0.76).contains(t) ? -22 : 0)
+                let y = 100 - CGFloat(wave) - CGFloat(spike)
+                if first { c.move(to: CGPoint(x: px, y: y)); first = false } else { c.addLine(to: CGPoint(x: px, y: y)) }
+            }
+            c.strokePath()
+            UIColor(red: 0.30, green: 0.85, blue: 0.45, alpha: 0.85).setFill()
+            c.fill(CGRect(x: 12, y: 150, width: 64, height: 6))
+            UIColor(red: 0.85, green: 0.65, blue: 0.25, alpha: 0.85).setFill()
+            c.fill(CGRect(x: 12, y: 160, width: 40, height: 6))
+        }
+    }
+
     private static func buildTool(_ id: String, screenMat: inout SCNMaterial?) -> SCNNode {
         let n = SCNNode()
         switch id {
@@ -284,8 +324,8 @@ final class HandRig {
             pad.position = SCNVector3(0, 0, 0)
             n.addChildNode(pad)
             let sm = SCNMaterial()
-            sm.diffuse.contents = UIColor(red: 0.05, green: 0.10, blue: 0.07, alpha: 1)
-            sm.emission.contents = UIColor(red: 0.30, green: 0.95, blue: 0.45, alpha: 1)
+            sm.diffuse.contents = UIColor(red: 0.02, green: 0.03, blue: 0.025, alpha: 1)
+            sm.emission.contents = HandRig.diagnosticScreenImage()
             sm.emission.intensity = 0.9
             screenMat = sm
             let screen = SCNNode(geometry: SCNPlane(width: 0.132, height: 0.088))
