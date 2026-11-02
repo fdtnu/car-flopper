@@ -529,8 +529,15 @@ final class HandRig {
                 var shaft = SIMD3<Float>(-0.35,0.85,0)
                 shaft -= outward * simd_dot(shaft,outward)
                 shaft = simd_normalize(shaft)
-                x = -shaft; y = outward
-                z = simd_normalize(simd_cross(x,y)); x = simd_cross(y,z)
+                // Keep the jaw axis on the wheel, but choose the wrist roll
+                // independently: outward as palm normal sent the forearm
+                // left/behind the wheel and hid it in the car. Aim the arm
+                // down/right toward the mechanic while retaining shaft contact.
+                x = -shaft
+                z = SIMD3<Float>(0.55, -0.65, 0.40)
+                z -= x * simd_dot(z, x)
+                z = simd_normalize(z)
+                y = simd_normalize(simd_cross(z, x))
             } else {
                 var inward = -outward
                 if workTool == "welder" {
