@@ -588,7 +588,7 @@ final class HandRig {
         //ADLOG     angleT += Double(dt)
         //ADLOG     let angleStage = angleT > 135 ? 4 : angleT > 128 ? 3 : angleT > 121 ? 2 : angleT > 114 ? 1 : 0
         //ADLOG     if angleStage != lastAngleStage {
-        //ADLOG         print("CFANGLES stage=\(angleStage) angleT=\(String(format: \"%.1f\", angleT))")
+        //ADLOG         print("CFANGLES stage=\(angleStage) angleT=\(angleT)")
         //ADLOG         lastAngleStage = angleStage
         //ADLOG     }
         //ADLOG     if angleStage > 0 {
