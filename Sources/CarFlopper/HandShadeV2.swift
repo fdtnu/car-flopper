@@ -815,17 +815,10 @@ enum HandShadeV2 {
                 let ao = Float(b[k * 8120 + i]) / 255
                 let nail = Float(b[5 * 8120 + i]) / 255
                 let t = (Float(b[6 * 8120 + i]) - 128) / 127
+                // Texture mode (HandTexBlob): vertex colors carry AO only;
+                // skin albedo and nails come from the diffuse texture.
                 let shade = 1 - 0.5 * ao
-                var r = shade * (0.935 + 0.065 * nail)
-                var g2 = shade * (0.90 + 0.10 * nail)
-                var bl = shade * (0.83 + 0.17 * nail)
-                if t > 0 {
-                    r += 0.075 * t * shade
-                    bl -= 0.045 * t * shade
-                } else {
-                    let dm = 1 + 0.10 * t
-                    r *= dm; g2 *= dm; bl *= dm
-                }
+                let r = shade, g2 = shade, bl = shade
                 cols[i * 4 + 0] = min(max(r, 0), 1)
                 cols[i * 4 + 1] = min(max(g2, 0), 1)
                 cols[i * 4 + 2] = min(max(bl, 0), 1)
@@ -843,8 +836,17 @@ enum HandShadeV2 {
         let cSrc = SCNGeometrySource(data: cData, semantic: .color, vectorCount: nv,
                                      usesFloatComponents: true, componentsPerVector: 4,
                                      bytesPerComponent: 4, dataOffset: 0, dataStride: 16)
-        let kept = g.sources.filter { $0.semantic != .color }
-        let out = SCNGeometry(sources: kept + [cSrc], elements: g.elements)
+        // Texture mode: attach the renormalized UV island (HandTexBlob,
+        // V-flipped for SceneKit's bottom-left texture origin).
+        let kept = g.sources.filter { $0.semantic != .color && $0.semantic != .texcoord }
+        var srcs = kept + [cSrc]
+        if HandTexBlob.uvData.count == 8120 * 8 {
+            srcs.append(SCNGeometrySource(data: HandTexBlob.uvData, semantic: .texcoord,
+                                          vectorCount: nv, usesFloatComponents: true,
+                                          componentsPerVector: 2, bytesPerComponent: 4,
+                                          dataOffset: 0, dataStride: 8))
+        }
+        let out = SCNGeometry(sources: srcs, elements: g.elements)
         out.materials = g.materials
         return out
     }
