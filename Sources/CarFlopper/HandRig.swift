@@ -68,6 +68,7 @@ final class HandRig {
     //ADLOG private var stressT: Double = 0
     //ADLOG private var palmT: Double = 0
     //ADLOG private var angleT: Double = 0
+    //ADLOG private var lastAngleStage: Int = -1
 
     // camera-space rest pose: lower right, forearm entering off-screen
     private let restPos = SCNVector3(0.150, -0.075, -0.360)
@@ -585,11 +586,19 @@ final class HandRig {
         //ADLOG // production by the ADLOG gate.
         //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFHandAngles") {
         //ADLOG     angleT += Double(dt)
-        //ADLOG     let angleStage = angleT > 128 ? 3 : angleT > 121 ? 2 : angleT > 114 ? 1 : 0
+        //ADLOG     let angleStage = angleT > 135 ? 4 : angleT > 128 ? 3 : angleT > 121 ? 2 : angleT > 114 ? 1 : 0
+        //ADLOG     if angleStage != lastAngleStage {
+        //ADLOG         print("CFANGLES stage=\(angleStage) angleT=\(String(format: \"%.1f\", angleT))")
+        //ADLOG         lastAngleStage = angleStage
+        //ADLOG     }
         //ADLOG     if angleStage > 0 {
         //ADLOG         for (_, n) in toolNodes { n.isHidden = true }
-        //ADLOG         handRelax?.isHidden = false
-        //ADLOG         handGrip?.isHidden = true
+        //ADLOG         // Stage 4 shows the GRIP (curled) hand in the nail-facing
+        //ADLOG         // orientation: the offline spiky clipped-nail artifact was
+        //ADLOG         // observed near curled fingertips, so this reproduces its
+        //ADLOG         // conditions in rendered pixels. Stages 1-3 keep relax.
+        //ADLOG         handRelax?.isHidden = angleStage >= 4
+        //ADLOG         handGrip?.isHidden = angleStage < 4
         //ADLOG         // wrist space: fingers -z, palm -y, dorsal +y; the camera
         //ADLOG         // sits roughly along wrist +y (a pi z-roll turns the palm to
         //ADLOG         // camera). Stage 1 rolls pi about z (palm to camera); stage 2
@@ -597,7 +606,7 @@ final class HandRig {
         //ADLOG         // hand +pi/2 about x so the fingertips (-z) swing onto +y
         //ADLOG         // and the nails face the camera. Run 180 showed the composed
         //ADLOG         // roll-then-pitch variant stayed palm-up; this is the fix.
-        //ADLOG         let angleQ = angleStage == 3
+        //ADLOG         let angleQ = angleStage >= 3
         //ADLOG             ? simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(1, 0, 0))
         //ADLOG             : simd_quatf(angle: angleStage == 1 ? Float.pi : Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
         //ADLOG         wrist.simdOrientation = angleQ
