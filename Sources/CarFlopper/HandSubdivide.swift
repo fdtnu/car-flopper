@@ -16,9 +16,16 @@ import SceneKit
 // Boundary rule: wrist-cut boundary verts are PINNED (exact positions and
 // colors) so the measured cuff seal geometry is preserved; boundary edge
 // midpoints use the 1/2 rule.
+//
+// Contact pinning (run 168): `pin` flags verts that sit on the tool contact
+// band of the grip poses (chain-fit flush to the handle radius). Those even
+// verts keep their EXACT input positions and colors, and odd verts between
+// two pinned verts use the 1/2 midpoint, so the rendered skin stays coplanar
+// with the handle surface instead of Loop-pulling into z-fighting range
+// (run 167 pinky-tip speckle). Dorsal skin still Loop-smooths normally.
 enum HandSubdivide {
 
-    static func subdivide(_ g: SCNGeometry) -> SCNGeometry {
+    static func subdivide(_ g: SCNGeometry, pin: [Bool]? = nil) -> SCNGeometry {
         guard let vSrc = g.sources.first(where: { $0.semantic == .vertex }),
               let el = g.elements.first, el.primitiveType == .triangles else { return g }
         let nv = vSrc.vectorCount
@@ -88,6 +95,11 @@ enum HandSubdivide {
             isBoundaryVert[info.a] = true
             isBoundaryVert[info.b] = true
         }
+        func isPinned(_ x: Int) -> Bool {
+            if isBoundaryVert[x] { return true }
+            if let pin = pin, x < pin.count, pin[x] { return true }
+            return false
+        }
         // Vertex adjacency (interior smoothing needs full neighbor ring).
         var nbrs = [Set<Int>](repeating: Set(), count: nv)
         for t in tris {
@@ -100,8 +112,8 @@ enum HandSubdivide {
         var outC = [SIMD4<Float>](repeating: SIMD4<Float>(1, 1, 1, 1), count: nv + sortedKeys.count)
         // Even verts.
         for v in 0..<nv {
-            if isBoundaryVert[v] {
-                outV[v] = verts[v]      // pinned: cuff seal geometry unchanged
+            if isPinned(v) {
+                outV[v] = verts[v]      // pinned: cuff seal + tool contact unchanged
                 outC[v] = cols[v]
                 continue
             }
@@ -122,7 +134,10 @@ enum HandSubdivide {
             edges[k] = info
             let a = info.a, b = info.b
             let idx = nv + oi
-            if info.opp.count >= 2 {
+            if isPinned(a) && isPinned(b) {
+                outV[idx] = 0.5 * (verts[a] + verts[b])   // contact band: chord midpoint, no Loop pull
+                outC[idx] = 0.5 * (cols[a] + cols[b])
+            } else if info.opp.count >= 2 {
                 outV[idx] = 0.375 * (verts[a] + verts[b]) + 0.125 * (verts[info.opp[0]] + verts[info.opp[1]])
                 outC[idx] = 0.375 * (cols[a] + cols[b]) + 0.125 * (cols[info.opp[0]] + cols[info.opp[1]])
             } else {
