@@ -586,7 +586,7 @@ final class HandRig {
         //ADLOG // production by the ADLOG gate.
         //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFHandAngles") {
         //ADLOG     angleT += Double(dt)
-        //ADLOG     let angleStage = angleT > 135 ? 4 : angleT > 128 ? 3 : angleT > 121 ? 2 : angleT > 114 ? 1 : 0
+        //ADLOG     let angleStage = angleT > 168 ? 4 : angleT > 150 ? 3 : angleT > 132 ? 2 : angleT > 114 ? 1 : 0
         //ADLOG     if angleStage != lastAngleStage {
         //ADLOG         NSLog("CFANGLES stage=%ld angleT=%.2f", angleStage, angleT)
         //ADLOG         lastAngleStage = angleStage
@@ -620,10 +620,11 @@ final class HandRig {
         //ADLOG                 let D = simd_normalize(camPos - spot)
         //ADLOG                 let up = SIMD3<Float>(0, 1, 0)
         //ADLOG                 let U = simd_normalize(up - D * simd_dot(D, up))
-        //ADLOG                 // wrist space: fingers -z, palm -y, dorsal +y.
-        //ADLOG                 // Map wrist +y to the camera direction for nails
-        //ADLOG                 // (to -D for palm), and wrist +z to -U (fingers up).
-        //ADLOG                 let worldY = angleStage == 1 ? -D : D
+        //ADLOG                 // wrist space: fingers -z, palm +y, dorsal -y (run 186
+        //ADLOG                 // rendered pixels: mapping +y to the camera showed the palm).
+        //ADLOG                 // Map palm to the camera for stage 1, dorsal/nails for
+        //ADLOG                 // stages 3-4, and wrist +z to -U (fingers up).
+        //ADLOG                 let worldY = angleStage == 1 ? D : -D
         //ADLOG                 let worldZ = -U
         //ADLOG                 let worldX = simd_cross(worldY, worldZ)
         //ADLOG                 wrist.simdWorldOrientation = simd_quatf(simd_float3x3(worldX, worldY, worldZ))
