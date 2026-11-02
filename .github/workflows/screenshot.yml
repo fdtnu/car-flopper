@@ -24,6 +24,11 @@ on:
         required: false
         type: boolean
         default: false
+      hand_angles:
+        description: 'Sim-only: park the hand after the repair plan and cycle palm/thumb/nail wrist angles (debug captures; extends burst frames)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -100,6 +105,7 @@ jobs:
           if [ "${{ inputs.mode }}" = "repair" ]; then ARGS="$ARGS -CFAutoDriveRepair"; fi
           if [ "${{ inputs.stress_cuff }}" = "true" ]; then ARGS="$ARGS -CFStressCuff"; fi
           if [ "${{ inputs.palm_check }}" = "true" ]; then ARGS="$ARGS -CFPalmCheck"; fi
+          if [ "${{ inputs.hand_angles }}" = "true" ]; then ARGS="$ARGS -CFHandAngles"; fi
           xcrun simctl launch cf-shot federicotaranu.carflopper $ARGS || true
           mkdir -p shots
           sleep 4
@@ -144,7 +150,9 @@ jobs:
           # 12s engine hold, wrench equip reach, 7s wheel hold, plus margin
           xcrun simctl io cf-shot recordVideo shots/repair-motion.mp4 &
           VIDPID=$!
-          for i in $(seq 1 21); do
+          N=21
+          if [ "${{ inputs.hand_angles }}" = "true" ]; then N=31; fi
+          for i in $(seq 1 $N); do
             sleep 5
             xcrun simctl io cf-shot screenshot "shots/repair-$(printf %02d $i).png" || true
           done
