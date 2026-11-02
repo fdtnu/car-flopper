@@ -67,6 +67,7 @@ final class HandRig {
     //ADLOG private var extLogT: Double = 0
     //ADLOG private var stressT: Double = 0
     //ADLOG private var palmT: Double = 0
+    //ADLOG private var angleT: Double = 0
 
     // camera-space rest pose: lower right, forearm entering off-screen
     private let restPos = SCNVector3(0.150, -0.075, -0.360)
@@ -572,6 +573,31 @@ final class HandRig {
         //ADLOG         // hand nodes sit in wrist space with fingers -z / palm -y,
         //ADLOG         // so a pi roll about wrist z turns the palm to face the camera
         //ADLOG         wrist.rotation = SCNVector4(0, 0, 1, Float.pi)
+        //ADLOG     }
+        //ADLOG }
+        //ADLOG // Hand-angles capture (sim-only, -CFHandAngles): after the repair
+        //ADLOG // plan finishes (~108s after garage appear in the current drive),
+        //ADLOG // park the hand and cycle the wrist through palm-up, thumb-side
+        //ADLOG // and nail-side orientations so periodic captures include genuinely
+        //ADLOG // palm/thumb/nail-facing frames from the real renderer. Tools
+        //ADLOG // hidden, relax hand shown; forced every frame while active so it
+        //ADLOG // holds regardless of rig mode. Deterministic; stripped from
+        //ADLOG // production by the ADLOG gate.
+        //ADLOG if ProcessInfo.processInfo.arguments.contains("-CFHandAngles") {
+        //ADLOG     angleT += Double(dt)
+        //ADLOG     let angleStage = angleT > 128 ? 3 : angleT > 121 ? 2 : angleT > 114 ? 1 : 0
+        //ADLOG     if angleStage > 0 {
+        //ADLOG         for (_, n) in toolNodes { n.isHidden = true }
+        //ADLOG         handRelax?.isHidden = false
+        //ADLOG         handGrip?.isHidden = true
+        //ADLOG         // wrist space: fingers -z, palm -y. Stage 1 rolls pi about
+        //ADLOG         // z (palm to camera); stage 2 rolls pi/2 (thumb side up);
+        //ADLOG         // stage 3 pitches the palm-up hand forward about x so the
+        //ADLOG         // nails and fingertips face the camera.
+        //ADLOG         let angleQ = angleStage == 3
+        //ADLOG             ? simd_quatf(angle: Float.pi, axis: SIMD3<Float>(0, 0, 1)) * simd_quatf(angle: -Float.pi / 2, axis: SIMD3<Float>(1, 0, 0))
+        //ADLOG             : simd_quatf(angle: angleStage == 1 ? Float.pi : Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
+        //ADLOG         wrist.simdOrientation = angleQ
         //ADLOG     }
         //ADLOG }
         // Solve the current transformed physical tip after pose/tool smoothing.
