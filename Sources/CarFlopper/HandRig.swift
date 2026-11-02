@@ -50,8 +50,6 @@ final class HandRig {
     private var pendingWorking: (on: Bool, tool: String?, atWorld: SCNVector3?)?
     private var workTargetWorld: SCNVector3?
     private var workNormalWorld: SCNVector3?
-    private var restCuffRoot: SIMD3<Float>?
-    private var shoulderRestRoot: SIMD3<Float>?
 
     private enum Mode { case idle, equip, working }
     private var mode: Mode = .idle
@@ -752,20 +750,16 @@ final class HandRig {
         let u = simd_normalize(SIMD3<Float>(vx.x, vx.y, vx.z))
         let v = simd_normalize(SIMD3<Float>(vy.x, vy.y, vy.z))
 
-        // Rest-pose calibration at runtime: the first update frames run with
-        // the rig in the rest pose, so capture the cuff anchor and derive the
-        // rest shoulder along the authored offset direction instead of trusting
-        // offline Euler math for frame construction.
-        if restCuffRoot == nil {
-            restCuffRoot = c0
-            let s0 = SIMD3<Float>(0.20, -0.20, 0.14)
-            shoulderRestRoot = c0 + simd_normalize(s0 - c0) * 0.44
-        }
-        guard let restCuff = restCuffRoot, let shoulderRest = shoulderRestRoot else { return }
-
-        // Shoulder follows the cuff at half rate so the arm never locks at
-        // full extension at rest and never stretches on far reaches.
-        var sh = shoulderRest + 0.5 * (c0 - restCuff)
+        // Straight-wrist forearm (Fred's reference photo, on-device .12):
+        // the anatomical forearm direction in wrist space is +z (fingers
+        // point -z), so the sleeve axis continues the hand's long axis,
+        // tilted down/outward to drape off the bottom-right frame edge.
+        // The old fixed camera-space shoulder offset was independent of the
+        // hand frame and folded the wrist into a hook over the tool handle.
+        // Tracking the live wrist frame keeps the wrist straight in every
+        // pose (idle, equip, working) instead of only at rest.
+        let tilt = SIMD3<Float>(0.30, -0.55, 0)
+        var sh = c0 + simd_normalize(wz + tilt * 0.45) * 0.44
         let dsh = sh - c0
         let lsh = simd_length(dsh)
         if lsh > 0.55 { sh = c0 + dsh * (0.55 / lsh) }
