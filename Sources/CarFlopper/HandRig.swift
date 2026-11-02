@@ -100,6 +100,10 @@ final class HandRig {
         // the tool anchor. Mesh coords: fingers +y, palm -z, thumb -x;
         // rotated so fingers point forward (-z), palm down (-y).
         let handRelax = HandMeshAsset.node("relax", material: skin)
+        // Run 166: route the rest pose through the same smoothed bake so its
+        // finger backs lose the triangle banding too (replaces, not stacks,
+        // the base color source).
+        handRelax.geometry = HandShadeV2.shaded(handRelax.geometry, pose: "relax")
         let handGrip = HandMeshAsset.node("grip", material: skin)
         handGrip.geometry = HandShadeV2.shaded(handGrip.geometry, pose: "grip")
         for h in [handRelax, handGrip] {
@@ -751,8 +755,8 @@ final class HandRig {
             // at the hand, away from the light). Spread the same tuck over 10 mm
             // so the end is buried deeper and the flare faces the camera.
             (-0.0100, 0.93), (-0.0070, 0.97), (-0.0040, 1.01), (-0.0015, 1.035), (0, 1.05),
-            (0.0012, 1.05), (0.0028, 1.055), (0.005, 1.06), (0.010, 1.07), (0.020, 1.09), (0.04, 1.12), (0.14, 1.21),
-            (0.27, 1.24), (0.34, 1.20), (0.45, 1.28), (0.55, 1.40), (1.2, 1.60)
+            (0.0012, 1.05), (0.0028, 1.055), (0.005, 1.06), (0.010, 1.07), (0.020, 1.09), (0.04, 1.12), (0.14, 1.06),
+            (0.27, 1.08), (0.34, 1.05), (0.45, 1.11), (0.55, 1.22), (1.2, 1.39)
         ]
         // Cuff station: the sample nearest the measured cuff point (robust to
         // control-point count; do not index by samples-per-segment).
