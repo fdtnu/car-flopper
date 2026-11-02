@@ -70,7 +70,9 @@ final class HandRig {
 
     // camera-space rest pose: lower right, forearm entering off-screen
     private let restPos = SCNVector3(0.150, -0.075, -0.360)
-    private let restRot = SCNVector3(-1.571, -0.20, -0.45) // euler
+    // Back/side of the hand faces the camera; fingers continue up-left
+    // from the forearm rather than hanging below a horizontal sleeve.
+    private let restRot = SCNVector3(1.2665, 0, 0.8224)
 
     // per-state tool presentation (smoothed in update like the pose):
     // idle lifts the shaft up-forward so a held tool stays in frame at rest;
@@ -462,7 +464,7 @@ final class HandRig {
                 // pivots about the wrist->tip axis; the tip solve after smoothing corrects its current transformed point.
                 if var a = aim { a.x += 0.141; a.y += 0.018; a.z += 0.196; aim = a }
                 target = aim ?? SCNVector3(0.14, -0.03, -0.20)
-                targetRot = SCNVector3(-1.571, -0.20, -0.45)
+                targetRot = restRot
                 targetToolRot = SCNVector3(0, Float.pi / 2, 0)
                 setWorkPivot(tool: workTool, angle: sinf(workTime * 4.0) * 0.55)
             case "screwdriver":
@@ -471,7 +473,7 @@ final class HandRig {
                 // tracking the ring on the panel.
                 if var a = aim { a.x += 0.132; a.y += 0.012; a.z += 0.173; aim = a }
                 target = aim ?? SCNVector3(0.13, -0.04, -0.22)
-                targetRot = SCNVector3(-1.571, -0.20, -0.45)
+                targetRot = restRot
                 targetToolRot = SCNVector3(0, Float.pi / 2, 0)
                 setWorkPivot(tool: workTool, angle: sinf(workTime * 3.5) * 0.35)
             case "welder":
@@ -480,13 +482,13 @@ final class HandRig {
                 // seam. Small tip stir (6mm) + wrist tremor = live weld pool.
                 if var a = aim { a.x += 0.069 + 0.006 * sinf(workTime * 2.3); a.y += 0.090 + 0.006 * cosf(workTime * 1.9); a.z += 0.128; aim = a }
                 target = aim ?? SCNVector3(0.07, 0.04, -0.27)
-                targetRot = SCNVector3(-1.571, -0.20, -0.45)
+                targetRot = restRot
                 targetToolRot = SCNVector3(0, Float.pi / 2, 0)
                 setWorkPivot(tool: workTool, angle: sinf(workTime * 7.0) * 0.18)
                 updateArc(on: true, t: workTime)
             case "diagnostics":
                 target = SCNVector3(0.12, -0.03, -0.40)
-                targetRot = SCNVector3(-1.571, -0.20, -0.45)
+                targetRot = restRot
                 targetToolRot = toolRotIdle
                 wrist.eulerAngles = SCNVector3(sinf(workTime * 1.8) * 0.10, sinf(workTime * 1.1) * 0.06, 0)
                 screenMat?.emission.intensity = 0.7 + 0.4 * CGFloat(abs(sinf(workTime * 3)))
@@ -750,35 +752,12 @@ final class HandRig {
         let u = simd_normalize(SIMD3<Float>(vx.x, vx.y, vx.z))
         let v = simd_normalize(SIMD3<Float>(vy.x, vy.y, vy.z))
 
-        // Straight-wrist forearm (Fred's reference photo, on-device .12):
-        // the anatomical forearm direction in wrist space is +z (fingers
-        // point -z), so the sleeve axis continues the hand's long axis,
-        // tilted down/outward to drape off the bottom-right frame edge.
-        // The old fixed camera-space shoulder offset was independent of the
-        // hand frame and folded the wrist into a hook over the tool handle.
-        // Tracking the live wrist frame keeps the wrist straight in every
-        // pose (idle, equip, working) instead of only at rest.
-        let tilt = SIMD3<Float>(0.30, -0.55, 0)
-        var sh = c0 + simd_normalize(wz + tilt * 0.45) * 0.44
-        let dsh = sh - c0
-        let lsh = simd_length(dsh)
-        if lsh > 0.55 { sh = c0 + dsh * (0.55 / lsh) }
-
-        // Two-bone elbow.
-        let delta = sh - c0
-        let distance = max(0.031, min(0.565, simd_length(delta)))
-        let axis = simd_normalize(delta)
-        let along = (0.27 * 0.27 - 0.30 * 0.30 + distance * distance) / (2 * distance)
-        let height = sqrtf(max(0.0001, 0.27 * 0.27 - along * along))
-        var bend = SIMD3<Float>(0.8, -1, 0.1)
-        bend -= axis * simd_dot(bend, axis)
-        bend = simd_normalize(bend)
-        let el = c0 + axis * along + bend * height
-
-        // The sleeve drapes along the forearm axis: with a flexed wrist the
-        // wrist axis points up and a loft seeded from it hooks over the wrist
-        // like a hood.
-        let fd = simd_normalize(el - c0)
+        // Keep the visible forearm tangent aligned with the hand. The old
+        // two-bone solver bent immediately at the cuff: even a wrist-tracked
+        // shoulder could still produce a large screen-space wrist kink.
+        // Bend only after a straight 23 cm forearm run, then escape offscreen.
+        let fd = wz
+        let el = c0 + fd * 0.23
 
         // Escape ray continuing past the lower-right frame edge.
         // Runs 105/107: the old path turned about 120 deg at the elbow toward
@@ -926,7 +905,7 @@ final class HandRig {
         //ADLOG let nowAD = CACurrentMediaTime()
         //ADLOG if nowAD - extLogT > 0.5 {
         //ADLOG     extLogT = nowAD
-        //ADLOG     NSLog("[CFAUTODRIVE][CFCUFF] tool=%@ pose=(%.4f,%.4f,%.4f) wristRot=(%.4f,%.4f,%.4f,%.4f) cuff=(%.4f,%.4f,%.4f) wz=(%.4f,%.4f,%.4f) el=(%.4f,%.4f,%.4f) sh=(%.4f,%.4f,%.4f) fd=(%.4f,%.4f,%.4f)", currentTool ?? "-", Double(pose.position.x), Double(pose.position.y), Double(pose.position.z), Double(wrist.rotation.x), Double(wrist.rotation.y), Double(wrist.rotation.z), Double(wrist.rotation.w), Double(c0.x), Double(c0.y), Double(c0.z), Double(wz.x), Double(wz.y), Double(wz.z), Double(el.x), Double(el.y), Double(el.z), Double(sh.x), Double(sh.y), Double(sh.z), Double(fd.x), Double(fd.y), Double(fd.z))
+        //ADLOG     NSLog("[CFAUTODRIVE][CFCUFF] tool=%@ pose=(%.4f,%.4f,%.4f) wristRot=(%.4f,%.4f,%.4f,%.4f) cuff=(%.4f,%.4f,%.4f) wz=(%.4f,%.4f,%.4f) el=(%.4f,%.4f,%.4f) sh=(%.4f,%.4f,%.4f) fd=(%.4f,%.4f,%.4f)", currentTool ?? "-", Double(pose.position.x), Double(pose.position.y), Double(pose.position.z), Double(wrist.rotation.x), Double(wrist.rotation.y), Double(wrist.rotation.z), Double(wrist.rotation.w), Double(c0.x), Double(c0.y), Double(c0.z), Double(wz.x), Double(wz.y), Double(wz.z), Double(el.x), Double(el.y), Double(el.z), Double(shPath.x), Double(shPath.y), Double(shPath.z), Double(fd.x), Double(fd.y), Double(fd.z))
         //ADLOG     NSLog("[CFAUTODRIVE][CFFRAME] u=(%.4f,%.4f,%.4f) v=(%.4f,%.4f,%.4f)", Double(u.x), Double(u.y), Double(u.z), Double(v.x), Double(v.y), Double(v.z))
         //ADLOG }
     }
