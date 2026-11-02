@@ -35,27 +35,78 @@ final class FlowModel: ObservableObject {
     enum Screen { case menu, lobby, game }
     @Published var screen: Screen = .menu
     var vm: GameViewModel?
+    private var phaseWatch: Task<Void, Never>?
+
+    init() {
+        //FLOWTEST if ProcessInfo.processInfo.arguments.contains("-CFLifecycleTest") {
+        //FLOWTEST     Task { await runLifecycleChecks() }
+        //FLOWTEST }
+    }
+
+    // Compiled into the simulator validation build only.
+    //FLOWTEST private func runLifecycleChecks() async {
+    //FLOWTEST     func pause() async { try? await Task.sleep(nanoseconds: 450_000_000) }
+    //FLOWTEST     func check(_ condition: Bool, _ label: String) {
+    //FLOWTEST         NSLog("[CFFLOWTEST] %@ %@", condition ? "PASS" : "FAIL", label)
+    //FLOWTEST     }
+    //FLOWTEST     let oldSession = GameSession(code: "TEST", name: "OLD")
+    //FLOWTEST     enterLobby(session: oldSession)
+    //FLOWTEST     guard let old = vm else { check(false, "old room exists"); return }
+    //FLOWTEST     await pause()
+    //FLOWTEST     leave()
+    //FLOWTEST     enterLobby(session: GameSession(code: "TEST", name: "NEW"))
+    //FLOWTEST     guard let current = vm else { check(false, "new room exists"); return }
+    //FLOWTEST     old.phase = "play"
+    //FLOWTEST     old.connectionError = "late old-room reset"
+    //FLOWTEST     await pause()
+    //FLOWTEST     check(vm === current && screen == .lobby, "stale phase and error cannot close replacement")
+    //FLOWTEST     current.phase = "play"
+    //FLOWTEST     await pause()
+    //FLOWTEST     check(vm === current && screen == .game, "current phase reaches game")
+    //FLOWTEST     current.connectionError = "current-room reset"
+    //FLOWTEST     await pause()
+    //FLOWTEST     check(vm == nil && screen == .menu, "current error returns to menu")
+    //FLOWTEST     enterLobby(session: GameSession(code: "TEST", name: "REENTRY"))
+    //FLOWTEST     guard let reentry = vm else { check(false, "reentry exists"); return }
+    //FLOWTEST     reentry.phase = "play"
+    //FLOWTEST     await pause()
+    //FLOWTEST     check(vm === reentry && screen == .game, "leave and reentry phase works")
+    //FLOWTEST     leave()
+    //FLOWTEST     reentry.phase = "lobby"
+    //FLOWTEST     await pause()
+    //FLOWTEST     check(vm == nil && screen == .menu, "left room cannot reopen lobby")
+    //FLOWTEST     NSLog("[CFFLOWTEST] DONE")
+    //FLOWTEST }
 
     func enterLobby(session: GameSession) {
+        // A new room replaces the old room, including its phase watcher.
+        phaseWatch?.cancel()
+        vm?.leave()
         let vm = GameViewModel(session: session)
         self.vm = vm
         self.screen = .lobby
-        // watch phase flips to move between lobby and game
-        Task { [weak self, weak vm] in
+        phaseWatch = Task { [weak self, weak vm] in
             var lastPhase = "lobby"
-        while let vm, !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 300_000_000)
+            while !Task.isCancelled {
+                do { try await Task.sleep(nanoseconds: 300_000_000) }
+                catch { return }
+                // Recheck after suspension. A stale room must never move or
+                // close a newer room, even if its last callback arrives late.
+                guard !Task.isCancelled, let self, let vm,
+                      self.vm === vm else { return }
                 if vm.phase != lastPhase {
                     lastPhase = vm.phase
-                    if vm.phase == "play" || vm.phase == "complete" { self?.screen = .game }
-                    if vm.phase == "lobby" { self?.screen = .lobby }
+                    if vm.phase == "play" || vm.phase == "complete" { self.screen = .game }
+                    if vm.phase == "lobby" { self.screen = .lobby }
                 }
-                if vm.connectionError != nil { self?.leave(); return }
+                if vm.connectionError != nil { self.leave(); return }
             }
         }
     }
 
     func leave() {
+        phaseWatch?.cancel()
+        phaseWatch = nil
         vm?.leave()
         vm = nil
         screen = .menu
