@@ -526,14 +526,10 @@ final class HandRig {
             let outward = simd_normalize(SIMD3<Float>(n.x,n.y,n.z))
             var x: SIMD3<Float>, y: SIMD3<Float>, z: SIMD3<Float>
             if workTool == "wrench" {
-                var shaft = SIMD3<Float>(-0.35,0.85,0)
-                shaft -= outward * simd_dot(shaft,outward)
-                shaft = simd_normalize(shaft)
-                // Keep the jaw axis on the wheel, but choose the wrist roll
-                // independently: outward as palm normal sent the forearm
-                // left/behind the wheel and hid it in the car. Aim the arm
-                // down/right toward the mechanic while retaining shaft contact.
-                x = -shaft
+                // The socket/jaw tip stays on the hub; put the hand outside
+                // the wheel rather than along its plane where it gets occluded.
+                // A slight downward bias keeps the shaft visible at the hub.
+                x = simd_normalize(outward + SIMD3<Float>(0, -0.22, 0))
                 z = SIMD3<Float>(0.55, -0.65, 0.40)
                 z -= x * simd_dot(z, x)
                 z = simd_normalize(z)
@@ -727,7 +723,7 @@ final class HandRig {
         guard tipLocal[tool] != nil else { return }
         // Work motion turns about the actual shaft direction. The separate
         // physical-tip solve translates its end back onto the live surface.
-        let d = tool == "wrench" ? SCNVector3(0,1,0) : toolAnchor.convertVector(SCNVector3(0,0,-1), to: wrist)
+        let d = toolAnchor.convertVector(SCNVector3(0,0,-1), to: wrist)
         let v = simd_normalize(SIMD3<Float>(d.x,d.y,d.z))
         wrist.rotation = SCNVector4(v.x,v.y,v.z,angle)
     }
