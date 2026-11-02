@@ -60,8 +60,11 @@ final class CarAssembly {
     }
 
     private func build() {
-        let body = Mat.flat(def.bodyRGB.0, def.bodyRGB.1, def.bodyRGB.2, rough: 0.30, metal: 0.55)
-        body.specular.contents = UIColor(white: 0.9, alpha: 1)
+        // Car paint: mostly dielectric with a soft clear-coat highlight.
+        // (Was rough 0.30 / metal 0.55 / specular 0.9: hot mirror lobes that
+        // clipped white bodies and read as plastic on colored ones.)
+        let body = Mat.flat(def.bodyRGB.0, def.bodyRGB.1, def.bodyRGB.2, rough: 0.45, metal: 0.20)
+        body.specular.contents = UIColor(white: 0.5, alpha: 1)
         let accent = Mat.flat(def.accentRGB.0, def.accentRGB.1, def.accentRGB.2, rough: 0.5, metal: 0.6)
         let interiorMat = Mat.flat(0.34, 0.33, 0.36, rough: 0.9)
         interiorMat.emission.contents = UIColor(white: 0.18, alpha: 1)
