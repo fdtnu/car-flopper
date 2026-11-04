@@ -102,19 +102,21 @@ jobs:
           echo "App bundle: $APP"
           xcrun simctl install cf-shot "$APP"
           xcrun simctl spawn cf-shot defaults write federicotaranu.carflopper carflopper.nick -string SIMHOST || true
-          # Exercise the real Swift FlowModel in the installed app, without
-          # creating public rooms or simulator autodrive timers.
+          # Exercise the real Swift FlowModel in the installed app. The
+          # reconnect checks create one short-lived real room on the
+          # production server (released on leave); no simulator autodrive
+          # timers run here.
           xcrun simctl spawn cf-shot log stream --level debug --predicate 'process == "CarFlopper"' --style compact > /tmp/cfflowtest.txt 2>&1 &
           FLOWLOG=$!
           xcrun simctl launch cf-shot federicotaranu.carflopper -CFLifecycleTest
-          for i in $(seq 1 15); do
+          for i in $(seq 1 60); do
             grep -q '\[CFFLOWTEST\] DONE' /tmp/cfflowtest.txt && break
             sleep 1
           done
           cat /tmp/cfflowtest.txt | grep CFFLOWTEST || true
           grep -q '\[CFFLOWTEST\] DONE' /tmp/cfflowtest.txt
           ! grep -q '\[CFFLOWTEST\] FAIL' /tmp/cfflowtest.txt
-          test "$(grep -c '\[CFFLOWTEST\] PASS' /tmp/cfflowtest.txt)" -eq 7
+          test "$(grep -c '\[CFFLOWTEST\] PASS' /tmp/cfflowtest.txt)" -eq 14
           xcrun simctl terminate cf-shot federicotaranu.carflopper
           kill "$FLOWLOG" || true
           ARGS="-CFAutoDrive"
