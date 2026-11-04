@@ -9,6 +9,7 @@ const BROADCAST_EVERY = 2; // every 2 ticks = 500ms
 const COOP_BONUS = 0.7;
 const MAX_MSG_BYTES = 4096; // fail closed on junk
 const IDLE_KICK_MS = 10 * 60 * 1000; // ghost-socket cleanup: no message for 10 min -> kick
+const EMPTY_ROOM_GRACE_MS = 2 * 60 * 1000; // a just-emptied room stays resumable this long
 const MIN_POS_GAP_MS = 40; // cap incoming pos at 25 Hz (client sends ~12 Hz)
 
 // Part ids + solo repair seconds. Must match the iOS client's GameContent.
@@ -90,15 +91,24 @@ export class GarageRoom {
     this.colorPool = [0, 1, 2, 3];
     this.tickCount = 0;
     this.timer = null;
+    this.emptySince = null; // set when the last player leaves; see EMPTY_ROOM_GRACE_MS
   }
 
   async fetch(request) {
     const url = new URL(request.url);
 
     if (url.pathname === "/claim") {
-      if (this.claimed) return new Response("taken", { status: 409 });
+      if (this.claimed) {
+        // An emptied room stays reserved for its players' rejoin during the
+        // grace window; a fresh claim may only take the code once the room
+        // is empty AND past the grace.
+        const resumable = this.players.size === 0 && this.emptySince != null && Date.now() - this.emptySince <= EMPTY_ROOM_GRACE_MS;
+        if (this.players.size > 0 || resumable) return new Response("taken", { status: 409 });
+        this.resetRoom(); // empty and past the grace: release for the new claimer
+      }
       this.claimed = true;
       this.code = url.searchParams.get("code") || "";
+      this.emptySince = null;
       return new Response("ok");
     }
 
@@ -116,6 +126,7 @@ export class GarageRoom {
       const pair = new WebSocketPair();
       const [client, server] = Object.values(pair);
       server.accept();
+      this.emptySince = null; // a join cancels the pending release of an emptied room
 
       const id = crypto.randomUUID().slice(0, 8);
       const color = this.colorPool.length ? this.colorPool.shift() : this.players.size % 4;
@@ -187,10 +198,25 @@ export class GarageRoom {
     }
     if (this.players.size === 0) {
       if (this.timer) { clearInterval(this.timer); this.timer = null; }
-      this.claimed = false; // room dies with last player; code becomes reusable
+      // Keep the room claimable for a short grace so a player whose
+      // connection dropped can rejoin and resume where they left off. The
+      // release is lazy: /claim checks emptySince against EMPTY_ROOM_GRACE_MS,
+      // so no extra timer is needed and DO eviction frees the code anyway.
+      this.emptySince = Date.now();
+      this.hostId = null; // first rejoiner becomes host
     } else {
       this.broadcastState();
     }
+  }
+
+  resetRoom() {
+    this.phase = "lobby";
+    this.carIndex = 0;
+    this.hostId = null;
+    this.parts = {};
+    this.colorPool = [0, 1, 2, 3];
+    this.tickCount = 0;
+    this.emptySince = null;
   }
 
   initCar() {
