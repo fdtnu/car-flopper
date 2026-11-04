@@ -651,7 +651,7 @@ extension HandPoseV2 {
         "ICQCutOcdidaxDCdQxOOsrSvX/y3SzbD0TmUI0zPfkUjLefk9/lKgkTGZvt8a5fHkO6qgUDUj/D0bELY7yffVcyjDS0IjZ+NuziA",
         "f7R4NEGMbJBruD6AVqhkMUFpQzZnm0uQMydpuTW4Nq10nHygBf/662AEF+r1hU2vEzrnSOUYBN/hZ7axBFD5mda9BAXtmqS4BBL8",
         "S8fCBG30HvGjBSCqj5ELBRb9HfaAEYLUKypfpWGfGoB+CwCW2+uoEQWel1KgD5ajnvJsAivUAmoEDoabU0kNDdvSi1DnCEOwhvls",
-        "CNu9/lHLA57ZiVhGBVLlxM1QCwiNGZa7CRGU4WfiBWHz/69fCQKQkEc/C0C9oBcgz04xoBcgz04xgUnQzKEjgUnQzKEjJzie0O0S",
+        "CNu9/lHLA57ZiVhGBVLlxM1QCwiNGZa7CRGU4WfiBWHz/69fCQKQkEc/C0C9oBcgz04xoBcgz04xgUnQzKEjgUnQzKEjJzie0O0S", 
         "tB+l0pMbFSjT8hpgFSjT8hpggUZM+IBZgUZM+IBZnlrQ6mlZnlrQ6mlZfx5X4hZkfx5X4hZk0isd3rWQ0isd3rWQvzR83rSUvzR8",
         "3rSUyVPw9GGMgTaH8G+jgTaH8G+jBCvl7bGpBCvl7bGp9D8O2Jqh9D8O2Jqh/iWx23Km/iWx23KmczdZ8B+NczdZ8B+N7SBR3DJl",
         "7SBR3DJlNhnuzCw4NhnuzCw4E0J8znOjE0J8znOjZDUm1IKUZDUm1IKUpCm4185qpCm4185qpEn7yxkvpEn7yxkv+yWp0VGn+yWp",
