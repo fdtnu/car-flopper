@@ -85,6 +85,42 @@ final class FlowModel: ObservableObject {
     //FLOWTEST     reentry.phase = "lobby"
     //FLOWTEST     await pause()
     //FLOWTEST     check(vm == nil && screen == .menu, "left room cannot reopen lobby")
+    //FLOWTEST     // Live reconnect: a real room on the production server, a
+    //FLOWTEST     // simulated local failure, then a real rejoin. This verifies
+    //FLOWTEST     // the replacement-socket ordering (room never goes empty),
+    //FLOWTEST     // duplicate-player reaping and host ownership against the
+    //FLOWTEST     // live server instead of assuming them.
+    //FLOWTEST     if let liveCode = try? await RoomClient.createRoom() {
+    //FLOWTEST         check(true, "live room created for reconnect test")
+    //FLOWTEST         let liveSession = GameSession(code: liveCode, name: "RECON")
+    //FLOWTEST         liveSession.maxReconnectAttempts = 2
+    //FLOWTEST         liveSession.reconnectDelay = { _ in 0.2 }
+    //FLOWTEST         enterLobby(session: liveSession)
+    //FLOWTEST         guard let liveVM = vm else { check(false, "reconnect room view model exists"); NSLog("[CFFLOWTEST] DONE"); return }
+    //FLOWTEST         try? liveSession.connect()
+    //FLOWTEST         for _ in 0..<40 { if liveSession.myId != nil { break }; try? await Task.sleep(nanoseconds: 200_000_000) }
+    //FLOWTEST         let firstId = liveSession.myId
+    //FLOWTEST         check(firstId != nil, "reconnect test joined live room")
+    //FLOWTEST         liveSession.handleReceiveFailure(NetError.server("simulated reset"))
+    //FLOWTEST         for _ in 0..<40 { if liveSession.myId != firstId { break }; try? await Task.sleep(nanoseconds: 200_000_000) }
+    //FLOWTEST         check(liveSession.myId != nil && liveSession.myId != firstId, "live reconnect rejoins room with a fresh id")
+    //FLOWTEST         check(vm === liveVM && liveVM.connectionError == nil, "reconnect avoids error bounce to menu")
+    //FLOWTEST         for _ in 0..<40 { if liveVM.players.count == 1 { break }; try? await Task.sleep(nanoseconds: 200_000_000) }
+    //FLOWTEST         check(liveVM.players.count == 1 && liveVM.players.first?.id == liveSession.myId, "ghost player reaped after reconnect")
+    //FLOWTEST         for _ in 0..<40 { if liveVM.hostId == liveSession.myId { break }; try? await Task.sleep(nanoseconds: 200_000_000) }
+    //FLOWTEST         check(liveVM.isHost, "room ownership returns to rejoined player")
+    //FLOWTEST         leave()
+    //FLOWTEST     } else {
+    //FLOWTEST         check(false, "live room created for reconnect test")
+    //FLOWTEST     }
+    //FLOWTEST     // Dead room: retries exhaust and the error still bounces to menu.
+    //FLOWTEST     let deadSession = GameSession(code: "ZZZ9", name: "DEAD")
+    //FLOWTEST     deadSession.maxReconnectAttempts = 2
+    //FLOWTEST     deadSession.reconnectDelay = { _ in 0.05 }
+    //FLOWTEST     enterLobby(session: deadSession)
+    //FLOWTEST     try? deadSession.connect()
+    //FLOWTEST     for _ in 0..<50 { if vm == nil { break }; try? await Task.sleep(nanoseconds: 200_000_000) }
+    //FLOWTEST     check(vm == nil && screen == .menu, "dead room reconnect gives up to menu")
     //FLOWTEST     NSLog("[CFFLOWTEST] DONE")
     //FLOWTEST }
 
