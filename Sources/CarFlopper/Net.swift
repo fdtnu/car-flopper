@@ -71,6 +71,9 @@ protocol GameSessionDelegate: AnyObject {
     func session(_ s: GameSession, didReceive snapshot: RoomSnapshot)
     func session(_ s: GameSession, didGetEvent kind: String, payload: [String: String])
     func sessionDidClose(_ s: GameSession, reason: String)
+    // A dropped connection was transparently re-established: the server
+    // assigned a fresh player id and the old player entry is gone.
+    func sessionDidResume(_ s: GameSession)
 }
 
 final class GameSession: NSObject, URLSessionWebSocketDelegate {
@@ -81,6 +84,18 @@ final class GameSession: NSObject, URLSessionWebSocketDelegate {
     private var session: URLSession?
     private var closed = false
 
+    // Reconnect-on-drop: a transient reset (like the ECONNRESET reproduced in
+    // 204-era gameplay) must not end the session on its own. The replacement
+    // socket is opened BEFORE the old one is retired, so even a solo room
+    // never goes empty during the rejoin (an empty room is destroyed
+    // server-side). Only after retries run out does the delegate hear
+    // sessionDidClose, which is what bounces the player to the menu.
+    private var reconnectAttempt = 0
+    private var reconnectWork: DispatchWorkItem?
+    private var retiring: (task: URLSessionWebSocketTask, session: URLSession)?
+    var maxReconnectAttempts = 4
+    var reconnectDelay: (Int) -> TimeInterval = { min(0.8 * pow(2.0, Double($0)), 6.0) }
+
     var snapshot: RoomSnapshot?
     private(set) var myId: String?
 
@@ -90,6 +105,10 @@ final class GameSession: NSObject, URLSessionWebSocketDelegate {
     }
 
     func connect() throws {
+        try openTask()
+    }
+
+    private func openTask() throws {
         guard var c = URLComponents(string: "\(RoomClient.wsBase)/rooms/\(code)/ws") else { throw NetError.badURL }
         c.queryItems = [URLQueryItem(name: "name", value: name)]
         guard let url = c.url else { throw NetError.badURL }
@@ -100,12 +119,12 @@ final class GameSession: NSObject, URLSessionWebSocketDelegate {
         let t = s.webSocketTask(with: url)
         self.task = t
         t.resume()
-        receive()
+        receive(on: t)
     }
 
-    private func receive() {
-        task?.receive { [weak self] result in
-            guard let self, !self.closed else { return }
+    private func receive(on task: URLSessionWebSocketTask) {
+        task.receive { [weak self] result in
+            guard let self, !self.closed, self.task === task else { return }
             switch result {
             case .success(let msg):
                 switch msg {
@@ -113,11 +132,50 @@ final class GameSession: NSObject, URLSessionWebSocketDelegate {
                 case .data(let d): if let text = String(data: d, encoding: .utf8) { self.handle(text) }
                 @unknown default: break
                 }
-                self.receive()
+                self.receive(on: task)
             case .failure(let err):
-                self.delegate?.sessionDidClose(self, reason: err.localizedDescription)
+                self.handleReceiveFailure(err)
             }
         }
+    }
+
+    // Single failure path for real socket errors and the FLOWTEST seam.
+    func handleReceiveFailure(_ err: Error) {
+        guard !closed else { return }
+        if reconnectAttempt < maxReconnectAttempts {
+            let delay = reconnectDelay(reconnectAttempt)
+            reconnectAttempt += 1
+            NSLog("[CFNET] receive failed (%@); reconnecting to room %@ in %.1fs (attempt %d/%d)",
+                  err.localizedDescription, code, delay, reconnectAttempt, maxReconnectAttempts)
+            let work = DispatchWorkItem { [weak self] in self?.reopen() }
+            reconnectWork = work
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + delay, execute: work)
+        } else {
+            NSLog("[CFNET] receive failed (%@); giving up after %d reconnect attempts", err.localizedDescription, reconnectAttempt)
+            delegate?.sessionDidClose(self, reason: err.localizedDescription)
+        }
+    }
+
+    private func reopen() {
+        guard !closed else { return }
+        cancelRetiring()
+        let oldTask = task, oldSession = session
+        do {
+            try openTask()
+            // Retire the old connection only once the replacement proves
+            // itself with a welcome; until then it keeps a solo room alive.
+            if let oldTask, let oldSession { retiring = (oldTask, oldSession) }
+        } catch {
+            oldTask?.cancel(with: .normalClosure, reason: nil)
+            oldSession?.invalidateAndCancel()
+            handleReceiveFailure(error)
+        }
+    }
+
+    private func cancelRetiring() {
+        retiring?.task.cancel(with: .normalClosure, reason: nil)
+        retiring?.session.invalidateAndCancel()
+        retiring = nil
     }
 
     private func handle(_ text: String) {
@@ -125,7 +183,14 @@ final class GameSession: NSObject, URLSessionWebSocketDelegate {
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let t = obj["t"] as? String else { return }
         if t == "welcome", let id = obj["id"] as? String {
+            let isResume = self.myId != nil && self.myId != id
             self.myId = id
+            self.reconnectAttempt = 0
+            if isResume {
+                NSLog("[CFNET] reconnected to room %@ with a fresh player id", self.code)
+                self.cancelRetiring()
+                self.delegate?.sessionDidResume(self)
+            }
         } else if t == "state", let payload = obj["room"],
            let pd = try? JSONSerialization.data(withJSONObject: payload),
            let snap = try? JSONDecoder().decode(RoomSnapshot.self, from: pd) {
@@ -162,6 +227,9 @@ final class GameSession: NSObject, URLSessionWebSocketDelegate {
 
     func close() {
         closed = true
+        reconnectWork?.cancel()
+        reconnectWork = nil
+        cancelRetiring()
         task?.cancel(with: .normalClosure, reason: nil)
         session?.invalidateAndCancel()
     }
