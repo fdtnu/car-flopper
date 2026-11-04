@@ -87,4 +87,44 @@ room.code = code;
 const snap = room.roomSnapshot();
 for (const k of ["code","phase","carIndex","hostId","players","parts"]) if (!(k in snap)) throw new Error("snapshot missing " + k);
 console.log("snapshot shape OK:", JSON.stringify({code: snap.code, players: snap.players.length}));
+
+// --- empty-room resume grace ---
+const r2 = new GarageRoom(null, null);
+const claim1 = await r2.fetch(new Request("https://do/claim?code=GRCE", { method: "POST" }));
+if (!claim1.ok) throw new Error("grace room claim failed");
+function joinInto(r, name) {
+  const server = new FakeWS();
+  const id = [...Array(8)].map(() => Math.random().toString(16)[2]).join("");
+  const color = r.colorPool.length ? r.colorPool.shift() : 0;
+  const player = { id, name, color, x: 0, z: 3.5, ry: 3.14, moving: false, repairing: null, lastSeen: Date.now(), lastPosAt: 0 };
+  r.players.set(server, player);
+  r.emptySince = null; // mirrors the /ws handler
+  if (!r.hostId) r.hostId = id;
+  return { server, player };
+}
+const solo = joinInto(r2, "solo");
+r2.phase = "play";
+r2.parts = { engine: { progress: 0.5, fixers: 0 } };
+// last player leaves: room is reserved for a rejoin, not destroyed
+r2.onClose(solo.server, solo.player);
+if (!r2.claimed) throw new Error("emptied room released immediately");
+if (r2.emptySince == null) throw new Error("emptySince not set on empty room");
+if (r2.hostId != null) throw new Error("hostId not cleared on empty room");
+if (r2.timer != null) throw new Error("tick timer not stopped on empty room");
+// a fresh claim during the grace is rejected
+const graceClaim = await r2.fetch(new Request("https://do/claim?code=NEW1", { method: "POST" }));
+if (graceClaim.status !== 409) throw new Error("fresh claim during grace not rejected: " + graceClaim.status);
+// rejoin resumes with phase/parts preserved and rejoiner as host
+const back = joinInto(r2, "solo-back");
+if (r2.hostId !== back.player.id) throw new Error("rejoiner did not become host");
+if (r2.phase !== "play" || r2.parts.engine?.progress !== 0.5) throw new Error("room state not preserved across resume");
+console.log("empty-room resume grace OK");
+// after the grace a fresh claim steals the code and resets the room
+r2.onClose(back.server, back.player);
+r2.emptySince = Date.now() - 10 * 60 * 1000; // past EMPTY_ROOM_GRACE_MS
+const steal = await r2.fetch(new Request("https://do/claim?code=FRESH", { method: "POST" }));
+if (!steal.ok) throw new Error("stale empty room not stealable: " + steal.status);
+if (r2.code !== "FRESH" || r2.phase !== "lobby" || Object.keys(r2.parts).length !== 0) throw new Error("stolen room not reset");
+console.log("stale room release + reclaim OK");
+
 console.log("ALL ROOM LOGIC TESTS PASSED");
