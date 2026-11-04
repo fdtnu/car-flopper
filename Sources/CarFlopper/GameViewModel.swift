@@ -306,6 +306,16 @@ extension GameViewModel: GameSessionDelegate {
             self.connectionError = reason
         }
     }
+
+    nonisolated func sessionDidResume(_ s: GameSession) {
+        Task { @MainActor in
+            guard self.sessionActive else { return }
+            // The server removed the old player entry (and its repair flag)
+            // with the dead socket; let the tick re-send a still-held repair.
+            self.repairSent = false
+            self.stanceReadySince = nil
+        }
+    }
 }
 
 // MARK: - Local unlock persistence
