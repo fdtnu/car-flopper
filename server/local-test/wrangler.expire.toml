@@ -1,5 +1,5 @@
 name = "car-flopper-api"
-main = "worker2.js"
+main = "worker-reconnect.js"
 compatibility_date = "2026-01-01"
 workers_dev = false
 routes = [
