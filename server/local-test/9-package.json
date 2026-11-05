@@ -1,0 +1,16 @@
+{
+  "name": "coop-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "worker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wrangler": "^4.158.0",
+    "ws": "^8.22.1"
+  }
+}
